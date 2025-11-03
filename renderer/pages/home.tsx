@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo, type ChangeEvent } from 'react';
 import { NextPage } from 'next';
 import { Calendar, Settings, Plus, Send, X } from 'lucide-react';
+import Link from 'next/link';
 
 interface DiaryItem {
   id: number;
@@ -60,10 +61,10 @@ const HomePage: NextPage = () => {
   // DB에서 해당 날짜 일기 불러오기
   const loadDiary = async (date: Date) => {
     if (!date || isNaN(date.getTime())) {
-      console.error('loadDiary: 유효하지 않은 날짜로 호출되었습니다.', date);
+      // console.error('loadDiary: 유효하지 않은 날짜로 호출되었습니다.', date);
       return;
     }
-    const isoDate = date.toISOString().slice(0, 10);
+    const isoDate = date.toLocaleDateString('en-CA');
     const list: DiaryItem[] = await window.ipc.invoke('get-diary', isoDate);
     setDiaryList(list);
   };
@@ -78,25 +79,25 @@ const HomePage: NextPage = () => {
   useEffect(() => {
     // ✨ [수정 1] 함수 이름을 handleIPCDateChange로 명확하게 변경
     const handleIPCDateChange = (isoDateString: unknown) => {
-      console.log(
-        '[렌더러] 메인으로부터 날짜 변경 이벤트 수신!',
-        isoDateString
-      );
+      // console.log(
+      //   '[렌더러] 메인으로부터 날짜 변경 이벤트 수신!',
+      //   isoDateString
+      // );
 
       if (typeof isoDateString !== 'string' || !isoDateString) {
-        console.error(
-          '[렌더러] 메인으로부터 유효하지 않은 날짜 값을 받았습니다:',
-          isoDateString
-        );
+        // console.error(
+        //   '[렌더러] 메인으로부터 유효하지 않은 날짜 값을 받았습니다:',
+        //   isoDateString
+        // );
         return;
       }
 
       const now = new Date(isoDateString);
 
       if (isNaN(now.getTime())) {
-        console.error(
-          `[렌더러] 수신된 값 '${isoDateString}'으로 유효한 날짜를 만들 수 없습니다.`
-        );
+        // console.error(
+        //   `[렌더러] 수신된 값 '${isoDateString}'으로 유효한 날짜를 만들 수 없습니다.`
+        // );
         return;
       }
 
@@ -107,10 +108,10 @@ const HomePage: NextPage = () => {
             : prevDate.toDateString();
 
         if (now.toDateString() !== prevDateString) {
-          console.log(
-            `%c[렌더러] 날짜 상태 업데이트: ${prevDateString} -> ${now.toDateString()}`,
-            'color: blue; font-weight: bold;'
-          );
+          // console.log(
+          //   `%c[렌더러] 날짜 상태 업데이트: ${prevDateString} -> ${now.toDateString()}`,
+          //   'color: blue; font-weight: bold;'
+          // );
           return now;
         }
         return prevDate;
@@ -161,7 +162,7 @@ const HomePage: NextPage = () => {
     // 4. 이 조합된 날짜로 diary 객체 생성
     const diary = {
       content: inputValue,
-      date: entryDate.toISOString().slice(0, 10), // 날짜는 currentDate 기반
+      date: entryDate.toLocaleDateString('en-CA'), // 날짜는 currentDate 기반
       time: entryDate.toTimeString().slice(0, 5), // 시간은 submissionTime 기반
     };
 
@@ -181,7 +182,9 @@ const HomePage: NextPage = () => {
         <p className='text-gray-950 text-sm'>{formattedHeaderDate}</p>
         <div className='flex gap-4'>
           <Calendar size={20} className='text-gray-600 cursor-pointer' />
-          <Settings size={20} className='text-gray-600 cursor-pointer' />
+          <Link href='/setting'>
+            <Settings size={20} className='text-gray-600 cursor-pointer' />
+          </Link>
         </div>
       </header>
 

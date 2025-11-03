@@ -18,36 +18,29 @@ let intervalId;
  * @param {BrowserWindow} window - 이벤트를 보낼 메인 윈도우
  */
 function startWatchingDate(window) {
-  if (!window) {
-    console.error('[메인] startWatchingDate: 윈도우 객체가 없습니다.');
-    return;
-  }
-
   // 이미 실행 중이면 중복 실행 방지
   if (intervalId) {
     clearInterval(intervalId);
   }
 
-  console.log('[메인] OS 날짜 변경 감시를 시작합니다.');
   intervalId = setInterval(() => {
     // 메인 프로세스의 new Date()는 OS 시간을 정확하게 반영합니다.
     const now = new Date();
 
     if (now.toDateString() !== currentDate) {
-      console.log(
-        `%c[메인] 날짜 변경 감지: ${currentDate} -> ${now.toDateString()}`,
-        'color: blue; font-weight: bold;'
-      );
       currentDate = now.toDateString();
 
       // 윈도우가 파괴되지 않았는지 확인 후 전송
       if (window && !window.isDestroyed()) {
         // 렌더러(React)로 'date-changed' 이벤트를 보냅니다.
         // isoDateString을 보내서 정확한 시간을 전달합니다.
-        window.webContents.send('date-changed', now.toISOString());
+        window.webContents.send(
+          'date-changed',
+          now.toLocaleDateString('en-CA')
+        );
       }
     }
-  }, 1000); // 1초 주기
+  }, 10000); // 1초 주기
 }
 
 /**
@@ -56,7 +49,6 @@ function startWatchingDate(window) {
 function stopWatchingDate() {
   if (intervalId) {
     clearInterval(intervalId);
-    console.log('[메인] OS 날짜 변경 감시를 중지합니다.');
     intervalId = null;
   }
 }
