@@ -73,6 +73,7 @@ export const createWindow = (
   const win = new BrowserWindow({
     ...state,
     ...options,
+    title: 'TIDA',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

@@ -1,8 +1,15 @@
 'use client';
-import React, { useState, useEffect, useMemo, type ChangeEvent } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  type ChangeEvent,
+} from 'react';
 import { NextPage } from 'next';
 import { Calendar, Settings, Plus, Send, X } from 'lucide-react';
 import Link from 'next/link';
+import Head from 'next/head';
 
 interface DiaryItem {
   id: number;
@@ -44,6 +51,9 @@ const HomePage: NextPage = () => {
   const [inputValue, setInputValue] = useState('');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [diaryList, setDiaryList] = useState<DiaryItem[]>([]);
+  const [file, setFile] = useState<File | null>(null);
+
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const weekDates = useMemo(() => getWeekViewDates(currentDate), [currentDate]);
 
@@ -61,7 +71,6 @@ const HomePage: NextPage = () => {
   // DB에서 해당 날짜 일기 불러오기
   const loadDiary = async (date: Date) => {
     if (!date || isNaN(date.getTime())) {
-      // console.error('loadDiary: 유효하지 않은 날짜로 호출되었습니다.', date);
       return;
     }
     const isoDate = date.toLocaleDateString('en-CA');
@@ -75,29 +84,35 @@ const HomePage: NextPage = () => {
     loadDiary(currentDate);
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // 1️⃣ 엔터 키 감지
+      if (e.key === 'Enter') {
+        // 2️⃣ 이미 input에 포커스 되어있다면 무시
+        const activeTag = document.activeElement.tagName;
+        if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
+          e.preventDefault(); // 불필요한 기본 동작 방지
+          inputRef.current?.focus(); // 3️⃣ input으로 포커스 이동
+        }
+      }
+    };
+
+    // 전역 키 이벤트 등록
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // IPC 이벤트 리스너 (메인 프로세스로부터 날짜 변경 수신)
   useEffect(() => {
     // ✨ [수정 1] 함수 이름을 handleIPCDateChange로 명확하게 변경
     const handleIPCDateChange = (isoDateString: unknown) => {
-      // console.log(
-      //   '[렌더러] 메인으로부터 날짜 변경 이벤트 수신!',
-      //   isoDateString
-      // );
-
       if (typeof isoDateString !== 'string' || !isoDateString) {
-        // console.error(
-        //   '[렌더러] 메인으로부터 유효하지 않은 날짜 값을 받았습니다:',
-        //   isoDateString
-        // );
         return;
       }
 
       const now = new Date(isoDateString);
 
       if (isNaN(now.getTime())) {
-        // console.error(
-        //   `[렌더러] 수신된 값 '${isoDateString}'으로 유효한 날짜를 만들 수 없습니다.`
-        // );
         return;
       }
 
@@ -108,10 +123,6 @@ const HomePage: NextPage = () => {
             : prevDate.toDateString();
 
         if (now.toDateString() !== prevDateString) {
-          // console.log(
-          //   `%c[렌더러] 날짜 상태 업데이트: ${prevDateString} -> ${now.toDateString()}`,
-          //   'color: blue; font-weight: bold;'
-          // );
           return now;
         }
         return prevDate;
@@ -140,7 +151,7 @@ const HomePage: NextPage = () => {
     setCurrentDate(new Date(newDate));
   };
 
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     setInputValue(event.target.value);
   };
 
@@ -178,6 +189,7 @@ const HomePage: NextPage = () => {
 
   return (
     <div className='w-full min-h-screen flex flex-col bg-white'>
+      <Head>TIDA</Head>
       <header className='flex justify-between p-4 items-center fixed top-0 left-0 right-0 bg-white z-10'>
         <p className='text-gray-950 text-sm'>{formattedHeaderDate}</p>
         <div className='flex gap-4'>
@@ -226,7 +238,7 @@ const HomePage: NextPage = () => {
             <span className='text-sm text-gray-400 mr-2 mb-1 flex-shrink-0'>
               {item.time}
             </span>
-            <div className='bg-slate-500 text-white p-2 rounded-xl overflow-hidden break-words max-w-[70%]'>
+            <div className='bg-slate-500 text-white p-2 rounded-xl overflow-hidden break-words max-w-[70%] whitespace-pre-wrap'>
               {item.content}
             </div>
             <button
@@ -245,13 +257,30 @@ const HomePage: NextPage = () => {
           size={24}
           className='text-slate-500 flex-shrink-0 cursor-pointer'
         />
-        <input
-          className='flex-grow p-2 border-2 border-gray-300 rounded-full focus:outline-none focus:border-slate-500 text-gray-950'
-          type='text'
+        <textarea
+          className='flex-grow p-2 border-2 border-gray-300 rounded-full focus:outline-none focus:border-slate-500 text-gray-950 resize-none'
           placeholder='오늘은 무슨일이 있었나요?'
+          ref={inputRef}
           value={inputValue}
+          rows={1}
           onChange={handleChange}
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          onKeyDown={(e) => {
+            // 한글 입력 중(조합 중) 엔터키 입력 방지
+            if (e.nativeEvent.isComposing) {
+              return;
+            }
+
+            if (e.key === 'Enter') {
+              if (e.shiftKey) {
+                // 1. Shift + Enter: 기본 동작(줄바꿈) 실행
+                return;
+              } else {
+                // 2. Enter: 기본 동작(줄바꿈) 방지 및 handleSend 호출
+                e.preventDefault();
+                handleSend();
+              }
+            }
+          }}
         />
         <Send
           size={24}
