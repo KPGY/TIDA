@@ -2,7 +2,7 @@
   "private": true,
   "name": "my-nextron-app",
   "productName": "TIDA",
-  "description": "My application description",
+  "description": "Moza Made It",
   "version": "1.0.0",
   "author": "Yoshihide Shiono <shiono.yoshihide@gmail.com>",
   "main": "app/background.js",
@@ -17,7 +17,7 @@
     "electron-store": "^8.2.0",
     "lucide-react": "^0.552.0",
     "tailwind-scrollbar-hide": "^4.0.0",
-    "typings": "global1.d.ts"
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@types/node": "^20.11.16",
@@ -32,5 +32,25 @@
     "react-dom": "^18.3.1",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.7.3"
+  },
+  "build": {
+    "appId": "com.moza.tida",
+    "productName": "TIDA",
+    "files": [
+      "main",
+      "renderer",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "KPGY",
+      "repo": "TIDA"
+    }
   }
 }

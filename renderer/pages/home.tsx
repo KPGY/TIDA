@@ -51,7 +51,6 @@ const HomePage: NextPage = () => {
   const [inputValue, setInputValue] = useState('');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [diaryList, setDiaryList] = useState<DiaryItem[]>([]);
-  const [file, setFile] = useState<File | null>(null);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -85,6 +84,8 @@ const HomePage: NextPage = () => {
   };
 
   useEffect(() => {
+    inputRef.current?.focus();
+
     const handleKeyDown = (e) => {
       // 1️⃣ 엔터 키 감지
       if (e.key === 'Enter') {
@@ -188,19 +189,23 @@ const HomePage: NextPage = () => {
   };
 
   return (
-    <div className='w-full min-h-screen flex flex-col bg-white'>
-      <Head>TIDA</Head>
-      <header className='flex justify-between p-4 items-center fixed top-0 left-0 right-0 bg-white z-10'>
-        <p className='text-gray-950 text-sm'>{formattedHeaderDate}</p>
+    <div className='w-full min-h-screen flex flex-col bg-bgTheme'>
+      <Head>
+        <title>TIDA</title>
+      </Head>
+      <header className='flex justify-between p-4 items-center fixed top-0 left-0 right-0 bg-panelTheme z-10'>
+        <p className='text-gray-900 text-dynamic font-baseFont'>
+          {formattedHeaderDate}
+        </p>
         <div className='flex gap-4'>
-          <Calendar size={20} className='text-gray-600 cursor-pointer' />
+          <Calendar size={20} className='text-mainTheme cursor-pointer' />
           <Link href='/setting'>
-            <Settings size={20} className='text-gray-600 cursor-pointer' />
+            <Settings size={20} className='text-mainTheme cursor-pointer' />
           </Link>
         </div>
       </header>
 
-      <div className='w-full flex justify-between items-center px-4 py-2 border-b border-t border-gray-100 overflow-x-auto fixed top-12 bg-white z-10'>
+      <div className='w-full flex justify-between items-center px-4 py-2 border-b border-t border-mainTheme overflow-x-auto fixed top-12 bg-panelTheme z-10'>
         {weekDates.map((date, index) => {
           const isSelected =
             currentDate &&
@@ -217,13 +222,13 @@ const HomePage: NextPage = () => {
               className={`flex flex-col items-center p-2 rounded-lg cursor-pointer flex-shrink-0 w-1/7 min-w-[14%] transition duration-200 
                 ${
                   isSelected
-                    ? 'bg-slate-500 text-white rounded-full font-bold shadow-md'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'bg-mainTheme text-white rounded-full font-bold shadow-md'
+                    : 'text-gray-950 hover:bg-gray-100'
                 }`}
               onClick={() => handleDateChange(date)}
             >
-              <span className='text-sm'>{shortDayOfWeek}</span>
-              <span className='text-xl'>{dayOfMonth}</span>
+              <span className='text-sm font-baseFont'>{shortDayOfWeek}</span>
+              <span className='text-xl font-baseFont'>{dayOfMonth}</span>
             </div>
           );
         })}
@@ -238,7 +243,7 @@ const HomePage: NextPage = () => {
             <span className='text-sm text-gray-400 mr-2 mb-1 flex-shrink-0'>
               {item.time}
             </span>
-            <div className='bg-slate-500 text-white p-2 rounded-xl overflow-hidden break-words max-w-[70%] whitespace-pre-wrap'>
+            <div className='bg-bubbleTheme text-white text-dynamic font-baseFont p-2 rounded-xl overflow-hidden break-words max-w-[70%] whitespace-pre-wrap'>
               {item.content}
             </div>
             <button
@@ -252,13 +257,13 @@ const HomePage: NextPage = () => {
         ))}
       </main>
 
-      <footer className='fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 flex items-center gap-4 z-10'>
+      <footer className='fixed bottom-0 left-0 right-0 p-4 bg-panelTheme border-t border-mainTheme flex items-center gap-4 z-10'>
         <Plus
           size={24}
-          className='text-slate-500 flex-shrink-0 cursor-pointer'
+          className='text-mainTheme flex-shrink-0 cursor-pointer'
         />
         <textarea
-          className='flex-grow p-2 border-2 border-gray-300 rounded-full focus:outline-none focus:border-slate-500 text-gray-950 resize-none'
+          className='flex-grow p-2 border-2 border-mainTheme rounded-full focus:outline-none text-gray-950 resize-none'
           placeholder='오늘은 무슨일이 있었나요?'
           ref={inputRef}
           value={inputValue}
@@ -284,7 +289,7 @@ const HomePage: NextPage = () => {
         />
         <Send
           size={24}
-          className='text-slate-500 flex-shrink-0 cursor-pointer'
+          className='text-mainTheme flex-shrink-0 cursor-pointer'
           onClick={handleSend}
         />
       </footer>
