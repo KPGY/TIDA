@@ -11,3 +11,7 @@ next-env.d.ts
 # build
 /app
 dist
+
+# release 폴더 방지
+/release/
+/dist/

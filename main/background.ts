@@ -6,10 +6,93 @@ import { app, ipcMain, Menu, BrowserWindow } from 'electron'; // BrowserWindow �
 import serve from 'electron-serve';
 import { createWindow } from './helpers';
 import Database from 'better-sqlite3';
-import { AutoUpdater } from 'electron';
+
+// ✨ [추가] 자동 업데이트 관련 모듈 임포트
+import { autoUpdater } from 'electron-updater';
+import log from 'electron-log';
+// ----------------------------------------------------
+
+// ✨ [추가] electron-log 설정
+log.transports.file.level = 'info';
+autoUpdater.logger = log;
+log.info('App starting...');
 
 // ----------------------------------------------------
-// ✨ [추가] 날짜 감시 로직
+// ✨ [추가] 자동 업데이트 로직 함수 정의
+/**
+ * electron-updater의 이벤트 리스너를 설정하고 업데이트 확인을 시작합니다.
+ * @param mainWindow - Electron BrowserWindow 객체
+ */
+function setupAutoUpdater(mainWindow: BrowserWindow): void {
+  // 1. 업데이트 에러 발생 시
+  autoUpdater.on('error', (err) => {
+    log.error('Update Error:', err);
+    mainWindow.webContents.send('update-message', {
+      type: 'error',
+      info: `업데이트 확인 중 에러 발생: ${err.message}`,
+    });
+  });
+
+  // 2. 새 업데이트 확인 중
+  autoUpdater.on('checking-for-update', () => {
+    log.info('Checking for update...');
+    mainWindow.webContents.send('update-message', {
+      type: 'checking',
+      info: '새 업데이트 확인 중...',
+    });
+  });
+
+  // 3. 업데이트가 없을 때
+  autoUpdater.on('update-not-available', (info) => {
+    log.info('Update not available.', info);
+    mainWindow.webContents.send('update-message', {
+      type: 'not-available',
+      info: '현재 최신 버전입니다.',
+    });
+  });
+
+  // 4. 업데이트를 찾았을 때
+  autoUpdater.on('update-available', (info) => {
+    log.info('Update available.', info);
+    mainWindow.webContents.send('update-message', {
+      type: 'available',
+      info: `새 업데이트 (v${info.version})가 있습니다. 다운로드를 시작합니다.`,
+      version: info.version,
+    });
+  });
+
+  // 5. 다운로드 진행 상황
+  autoUpdater.on('download-progress', (progressObj) => {
+    const percent = progressObj.percent.toFixed(2);
+    log.info(`Download Progress: ${percent}%`);
+    mainWindow.webContents.send('update-message', {
+      type: 'progress',
+      info: '업데이트 다운로드 중...',
+      percent: progressObj.percent,
+    });
+  });
+
+  // 6. 다운로드 완료
+  autoUpdater.on('update-downloaded', (info) => {
+    log.info('Update downloaded.');
+    mainWindow.webContents.send('update-message', {
+      type: 'downloaded',
+      info: '업데이트 다운로드가 완료되었습니다. 재시작하여 적용합니다.',
+    });
+  });
+
+  // 프로덕션 환경일 때만 업데이트 확인 시작 (플랫폼 체크는 외부 호출부에서 이미 수행됨)
+  if (app.isPackaged) {
+    log.info('Starting auto-updater check...');
+    autoUpdater.checkForUpdatesAndNotify();
+  } else {
+    log.warn('Skipping auto-updater check in development environment.');
+  }
+}
+// ----------------------------------------------------
+
+// ----------------------------------------------------
+// ✨ [기존 코드] 날짜 감시 로직
 let currentDate = new Date().toDateString();
 let intervalId;
 
@@ -18,7 +101,7 @@ let intervalId;
  * 날짜가 변경되면 렌더러(React)에 'date-changed' 이벤트를 보냅니다.
  * @param {BrowserWindow} window - 이벤트를 보낼 메인 윈도우
  */
-function startWatchingDate(window) {
+function startWatchingDate(window: BrowserWindow) {
   // 이미 실행 중이면 중복 실행 방지
   if (intervalId) {
     clearInterval(intervalId);
@@ -77,10 +160,16 @@ db.prepare(
 `
 ).run();
 
+// ✨ [추가] IPC: 업데이트 적용 후 앱 재시작
+ipcMain.on('restart-app', () => {
+  log.info('Restarting app to install update...');
+  autoUpdater.quitAndInstall();
+});
+
 (async () => {
   await app.whenReady();
 
-  // ✨ 추가된 코드: 메뉴 표시줄 제거
+  // ✨ 기존 코드: 메뉴 표시줄 제거
   if (process.platform === 'win32' || process.platform === 'linux') {
     Menu.setApplicationMenu(null);
   }
@@ -97,6 +186,15 @@ db.prepare(
 
   if (isProd) {
     await mainWindow.loadURL('app://./home');
+
+    // ✨ [수정] 프로덕션 빌드이면서 Windows 플랫폼일 때만 자동 업데이트 감시 시작
+    if (process.platform === 'win32') {
+      setupAutoUpdater(mainWindow);
+    } else {
+      log.info(
+        `Auto-updater is disabled for current platform: ${process.platform}`
+      );
+    }
   } else {
     const port = process.argv[2];
     await mainWindow.loadURL(`http://localhost:${port}/home`);
@@ -104,7 +202,7 @@ db.prepare(
   }
 
   // ----------------------------------------------------
-  // ✨ [수정]
+  // ✨ [기존 코드]
   // 윈도우 생성 직후에 바로 감시 시작
   startWatchingDate(mainWindow);
 
@@ -117,7 +215,7 @@ db.prepare(
 
 app.on('window-all-closed', () => {
   // ----------------------------------------------------
-  // ✨ [추가] 앱이 종료되기 전 타이머 완전 정지
+  // ✨ [기존 코드] 앱이 종료되기 전 타이머 완전 정지
   stopWatchingDate();
   // ----------------------------------------------------
   app.quit();
