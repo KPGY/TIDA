@@ -222,11 +222,8 @@ export default function SettingPage() {
           style={{ backgroundColor: bgTheme }}
         >
           <p
-            className={`text-gray-950 text-dynamic font-custom-base font-normal`}
-            // 글꼴 색상을 배경과 대비되도록 설정 (텍스트 색상은 theme에 따라 변경 필요)
+            className={`text-gray-950 text-dynamic font-normal`}
             style={{
-              color: bubbleTheme,
-              // 미리보기 창에서 직접 폰트 패밀리 적용 (글꼴이 확실히 보이도록)
               fontFamily: baseFont,
               // 글자 크기 적용
               fontSize: fontSize,

@@ -6,6 +6,7 @@ import { app, ipcMain, Menu, BrowserWindow } from 'electron'; // BrowserWindow �
 import serve from 'electron-serve';
 import { createWindow } from './helpers';
 import Database from 'better-sqlite3';
+import { AutoUpdater } from 'electron';
 
 // ----------------------------------------------------
 // ✨ [추가] 날짜 감시 로직

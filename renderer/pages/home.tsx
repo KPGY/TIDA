@@ -205,7 +205,7 @@ const HomePage: NextPage = () => {
         </div>
       </header>
 
-      <div className='w-full flex justify-between items-center px-4 py-2 border-b border-t border-mainTheme overflow-x-auto fixed top-12 bg-panelTheme z-10'>
+      <div className='w-full flex justify-between items-center px-4 py-2 overflow-x-auto fixed top-12 bg-panelTheme z-10'>
         {weekDates.map((date, index) => {
           const isSelected =
             currentDate &&
@@ -227,8 +227,10 @@ const HomePage: NextPage = () => {
                 }`}
               onClick={() => handleDateChange(date)}
             >
-              <span className='text-sm font-baseFont'>{shortDayOfWeek}</span>
-              <span className='text-xl font-baseFont'>{dayOfMonth}</span>
+              <span className='text-dynamic font-baseFont'>
+                {shortDayOfWeek}
+              </span>
+              <span className='text-dynamic font-baseFont'>{dayOfMonth}</span>
             </div>
           );
         })}
@@ -257,14 +259,13 @@ const HomePage: NextPage = () => {
         ))}
       </main>
 
-      <footer className='fixed bottom-0 left-0 right-0 p-4 bg-panelTheme border-t border-mainTheme flex items-center gap-4 z-10'>
+      <footer className='fixed bottom-0 left-0 right-0 p-4 bg-panelTheme flex items-center gap-4 z-10'>
         <Plus
           size={24}
           className='text-mainTheme flex-shrink-0 cursor-pointer'
         />
         <textarea
-          className='flex-grow p-2 border-2 border-mainTheme rounded-full focus:outline-none text-gray-950 resize-none'
-          placeholder='오늘은 무슨일이 있었나요?'
+          className='flex-grow p-2 rounded-full focus:outline-none text-gray-950 resize-none'
           ref={inputRef}
           value={inputValue}
           rows={1}
