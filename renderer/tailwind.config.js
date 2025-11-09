@@ -12,6 +12,10 @@ module.exports = {
         bubbleTheme: 'var(--color-bubble)',
         panelTheme: 'var(--color-panel)',
         mainTheme: 'var(--color-main)',
+        bgThemeEnd: 'var(--color-bg-end)',
+        bubbleThemeEnd: 'var(--color-bubble-end)',
+        panelThemeEnd: 'var(--color-panel-end)',
+        mainThemeEnd: 'var(--color-main-end)',
       },
 
       fontFamily: {

@@ -4,6 +4,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { Home } from 'lucide-react';
 import { useColorStore } from '../components/store';
+import { useState } from 'react';
 
 // 시각적 구분을 위한 폰트 옵션 목록
 const fontOptions = [
@@ -15,7 +16,7 @@ const fontOptions = [
   {
     label: '명조 (세리프)',
     tailwindClass: 'font-serif',
-    cssValue: 'Georgia, "Times New Roman", serif',
+    cssValue: 'Georgia, "Tims New Roman", serif',
   },
   {
     label: '고정폭 (모노)',
@@ -35,9 +36,16 @@ export default function SettingPage() {
     bubbleTheme,
     panelTheme,
     mainTheme,
+    bgThemeEnd,
+    bubbleThemeEnd,
+    panelThemeEnd,
+    mainThemeEnd,
     baseFont,
     fontSize,
+    gradientMode,
+    setGradientMode,
     setSingleColor,
+    setSingleGradientColor,
     setFontStyle, // 폰트 상태 변경 함수
   } = useColorStore();
 
@@ -63,6 +71,13 @@ export default function SettingPage() {
     setFontStyle('baseFont', cssValue);
   };
 
+  // 그라데이션 모드 토글 핸들러
+  const toggleGradientMode = () => {
+    setGradientMode(!gradientMode);
+  };
+
+  const isEndColorDisabled = !gradientMode;
+
   return (
     <React.Fragment>
       <Head>
@@ -80,9 +95,17 @@ export default function SettingPage() {
 
       <main className='flex flex-col gap-6 p-4 md:p-8 max-w-4xl mx-auto'>
         {/* === 색상 설정 영역 (2x2 Grid) === */}
-        <h2 className='text-xl font-bold text-gray-950 border-b pb-2'>
-          테마 색상
-        </h2>
+        <div className='flex justify-between items-center border-b'>
+          <h2 className='text-xl font-bold text-gray-950  pb-2'>테마 색상</h2>
+          <button
+            className={`text-xl font-bold ${
+              gradientMode ? 'text-gray-950' : 'text-gray-500'
+            } pb-2`}
+            onClick={toggleGradientMode}
+          >
+            그라데이션 모드
+          </button>
+        </div>
 
         <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
           {/* 1. 메인 (Main) 색상 */}
@@ -100,8 +123,14 @@ export default function SettingPage() {
               <input
                 type='color'
                 name='mainThemeEnd'
-                value={mainTheme}
-                className='h-10 w-16 cursor-pointer rounded-md opacity-50' // 단일 색상 모드로 가정하고 투명도 적용
+                value={mainThemeEnd}
+                disabled={isEndColorDisabled}
+                className={`h-10 w-16 cursor-pointer rounded-md ${
+                  gradientMode ? 'opacity-100' : 'opacity-50'
+                }`} // 단일 색상 모드로 가정하고 투명도 적용
+                onChange={(e) =>
+                  setSingleGradientColor('mainThemeEnd', e.target.value)
+                }
               />
             </div>
           </div>
@@ -121,8 +150,14 @@ export default function SettingPage() {
               <input
                 type='color'
                 name='bgThemeEnd'
-                value={bgTheme}
-                className='h-10 w-16 cursor-pointer rounded-md opacity-50'
+                value={bgThemeEnd}
+                disabled={isEndColorDisabled}
+                className={`h-10 w-16 cursor-pointer rounded-md ${
+                  gradientMode ? 'opacity-100' : 'opacity-50'
+                }`}
+                onChange={(e) =>
+                  setSingleGradientColor('bgThemeEnd', e.target.value)
+                }
               />
             </div>
           </div>
@@ -142,8 +177,14 @@ export default function SettingPage() {
               <input
                 type='color'
                 name='panelThemeEnd'
-                value={panelTheme}
-                className='h-10 w-16 cursor-pointer rounded-md opacity-50'
+                value={panelThemeEnd}
+                disabled={isEndColorDisabled}
+                className={`h-10 w-16 cursor-pointer rounded-md ${
+                  gradientMode ? 'opacity-100' : 'opacity-50'
+                }`}
+                onChange={(e) =>
+                  setSingleGradientColor('panelThemeEnd', e.target.value)
+                }
               />
             </div>
           </div>
@@ -163,8 +204,14 @@ export default function SettingPage() {
               <input
                 type='color'
                 name='bubbleThemeEnd'
-                value={bubbleTheme}
-                className='h-10 w-16 cursor-pointer rounded-md opacity-50'
+                value={bubbleThemeEnd}
+                disabled={isEndColorDisabled}
+                className={`h-10 w-16 cursor-pointer rounded-md ${
+                  gradientMode ? 'opacity-100' : 'opacity-50'
+                }`}
+                onChange={(e) =>
+                  setSingleGradientColor('bubbleThemeEnd', e.target.value)
+                }
               />
             </div>
           </div>
@@ -217,7 +264,11 @@ export default function SettingPage() {
           미리 보기
         </h2>
         <div
-          className='border border-gray-300 bg-bgTheme rounded-md mb-4 h-40 p-4 flex flex-col justify-center items-center'
+          className={`border border-gray-300 ${
+            gradientMode
+              ? 'bg-gradient-to-r from-bgTheme to-bgThemeEnd'
+              : 'bg-bgTheme'
+          } rounded-md mb-4 h-40 p-4 flex flex-col justify-center items-center`}
           // 배경색과 폰트 스타일을 직접 적용하여 미리보기
         >
           <p
