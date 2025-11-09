@@ -10,6 +10,7 @@ import { NextPage } from 'next';
 import { Calendar, Settings, Plus, Send, X } from 'lucide-react';
 import Link from 'next/link';
 import Head from 'next/head';
+import AutoUpdateStatus from '../components/AutoUpdateStatus';
 
 interface DiaryItem {
   id: number;
@@ -190,6 +191,7 @@ const HomePage: NextPage = () => {
 
   return (
     <div className='w-full min-h-screen flex flex-col bg-bgTheme'>
+      <AutoUpdateStatus />
       <Head>
         <title>TIDA</title>
       </Head>

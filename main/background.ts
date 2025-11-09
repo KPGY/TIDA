@@ -94,7 +94,7 @@ function setupAutoUpdater(mainWindow: BrowserWindow): void {
 // ----------------------------------------------------
 // ✨ [기존 코드] 날짜 감시 로직
 let currentDate = new Date().toDateString();
-let intervalId;
+let intervalId: NodeJS.Timeout | undefined; // 타입 추가
 
 /**
  * 1초마다 OS의 실제 날짜를 확인하고,
@@ -124,7 +124,7 @@ function startWatchingDate(window: BrowserWindow) {
         );
       }
     }
-  }, 10000); // 1초 주기
+  }, 10000); // 10초 주기
 }
 
 /**
@@ -133,7 +133,7 @@ function startWatchingDate(window: BrowserWindow) {
 function stopWatchingDate() {
   if (intervalId) {
     clearInterval(intervalId);
-    intervalId = null;
+    intervalId = undefined; // 정리 후 undefined로 설정
   }
 }
 // ----------------------------------------------------
@@ -160,10 +160,23 @@ db.prepare(
 `
 ).run();
 
-// ✨ [추가] IPC: 업데이트 적용 후 앱 재시작
-ipcMain.on('restart-app', () => {
+// ✨ [수정] IPC: 업데이트 적용 후 앱 재시작 (윈도우 닫기 추가)
+ipcMain.handle('restart-app', () => {
   log.info('Restarting app to install update...');
+
+  // 1. 모든 윈도우를 명시적으로 닫아 종료를 시도합니다. (설치 충돌 방지)
+  BrowserWindow.getAllWindows().forEach((w) => {
+    // 윈도우가 아직 닫히지 않았다면 닫기를 시도합니다.
+    if (!w.isDestroyed()) {
+      w.close();
+    }
+  });
+
+  // 2. 윈도우 닫기 이벤트 처리를 기다린 후 autoUpdater를 호출합니다.
+  // 이 호출이 앱을 강제로 닫고 설치 프로그램을 실행하게 됩니다.
   autoUpdater.quitAndInstall();
+
+  return Promise.resolve({});
 });
 
 (async () => {
@@ -247,6 +260,6 @@ ipcMain.handle('delete-diary', (_event, id) => {
     return { success: true };
   } catch (error) {
     console.error('Error deleting diary entry:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: (error as Error).message };
   }
 });

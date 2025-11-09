@@ -217,9 +217,8 @@ export default function SettingPage() {
           미리 보기
         </h2>
         <div
-          className='border border-gray-300 rounded-md mb-4 h-40 p-4 flex flex-col justify-center items-center'
+          className='border border-gray-300 bg-bgTheme rounded-md mb-4 h-40 p-4 flex flex-col justify-center items-center'
           // 배경색과 폰트 스타일을 직접 적용하여 미리보기
-          style={{ backgroundColor: bgTheme }}
         >
           <p
             className={`text-gray-950 text-dynamic font-normal`}
