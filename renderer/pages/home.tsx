@@ -200,20 +200,17 @@ const HomePage: NextPage = () => {
       }`}
     >
       <AutoUpdateStatus />
-      <Head>
-        <title>TIDA</title>
-      </Head>
       <header
         className={`flex justify-between p-4 items-center fixed ${
           gradientMode
             ? 'bg-gradient-to-r from-panelTheme to-panelThemeEnd'
             : 'bg-panelTheme'
-        } top-0 left-0 right-0 z-10`}
+        } top-0 left-0 right-0 z-10 app-drag`}
       >
         <p className='text-gray-900 text-dynamic font-baseFont'>
           {formattedHeaderDate}
         </p>
-        <div className='flex gap-4'>
+        <div className='flex gap-4 app-no-drag'>
           <Calendar size={20} className='text-mainTheme cursor-pointer' />
           <Link href='/setting'>
             <Settings size={20} className='text-mainTheme cursor-pointer' />

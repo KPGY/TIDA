@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+const plugin = require('tailwindcss/plugin');
+
 module.exports = {
   content: [
     './renderer/pages/**/*.{js,ts,jsx,tsx}',
@@ -31,5 +33,20 @@ module.exports = {
       },
     },
   },
-  plugins: [require('tailwind-scrollbar-hide')],
+  plugins: [
+    plugin(function ({ addUtilities }) {
+      const newUtilities = {
+        // 드래그 가능 영역 클래스 정의
+        '.app-drag': {
+          '-webkit-app-region': 'drag',
+        },
+        // 드래그 불가능 영역 클래스 정의
+        '.app-no-drag': {
+          '-webkit-app-region': 'no-drag',
+        },
+      };
+
+      addUtilities(newUtilities, ['responsive', 'hover']);
+    }),
+  ],
 };

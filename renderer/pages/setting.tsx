@@ -1,10 +1,8 @@
 'use client';
 import React, { ChangeEvent, useMemo } from 'react';
-import Head from 'next/head';
 import Link from 'next/link';
-import { Home } from 'lucide-react';
+import { Home, ToggleLeft, ToggleRight, Sparkles } from 'lucide-react';
 import { useColorStore } from '../components/store';
-import { useState } from 'react';
 
 // 시각적 구분을 위한 폰트 옵션 목록
 const fontOptions = [
@@ -80,37 +78,45 @@ export default function SettingPage() {
 
   return (
     <React.Fragment>
-      <Head>
-        <title>TIDA - 설정</title>
-      </Head>
-      <header className='flex p-4 justify-between items-center bg-gray-50 shadow-sm'>
-        <h1 className='text-lg font-semibold text-gray-800'>설정</h1>
+      <header className='flex p-4 justify-between items-center bg-gray-50 shadow-sm app-drag fixed top-0 z-10 w-full'>
+        <h1 className='text-lg font-baseFont text-gray-800'>설정</h1>
         <Link
-          className='text-gray-950 p-1 rounded-full hover:bg-gray-200 transition'
+          className='text-gray-950 p-1 rounded-full hover:bg-gray-200 transition app-no-drag'
           href='/home'
         >
-          <Home size={20} className='text-gray-600 cursor-pointer' />
+          <Home size={20} className='text-mainTheme cursor-pointer' />
         </Link>
       </header>
 
-      <main className='flex flex-col gap-6 p-4 md:p-8 max-w-4xl mx-auto'>
+      <main className='flex flex-col gap-6 p-4 md:p-8 max-w-4xl mx-auto mt-16'>
         {/* === 색상 설정 영역 (2x2 Grid) === */}
         <div className='flex justify-between items-center border-b'>
-          <h2 className='text-xl font-bold text-gray-950  pb-2'>테마 색상</h2>
+          <h2 className='text-xl font-baseFont font-bold text-gray-950  pb-2'>
+            테마 색상
+          </h2>
           <button
-            className={`text-xl font-bold ${
+            className={`text-xl font-bold flex gap-1 ${
               gradientMode ? 'text-gray-950' : 'text-gray-500'
             } pb-2`}
             onClick={toggleGradientMode}
           >
-            그라데이션 모드
+            {gradientMode ? (
+              <Sparkles className='text-mainTheme' size={20} />
+            ) : (
+              <Sparkles className='opacity-50' size={20} />
+            )}
+            {gradientMode ? (
+              <ToggleRight className='text-mainTheme' size={20} />
+            ) : (
+              <ToggleLeft className='opacity-50' size={20} />
+            )}
           </button>
         </div>
 
         <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
           {/* 1. 메인 (Main) 색상 */}
           <div className='grid grid-cols-[1fr_2fr] items-center gap-4'>
-            <label className='text-gray-950 text-sm font-medium'>메인</label>
+            <label className='text-gray-950 text-sm font-baseFont'>메인</label>
             <div className='flex gap-4 justify-end'>
               <input
                 type='color'
@@ -137,7 +143,7 @@ export default function SettingPage() {
 
           {/* 2. 배경 (Background) 색상 */}
           <div className='grid grid-cols-[1fr_2fr] items-center gap-4'>
-            <label className='text-gray-950 text-sm font-medium'>배경</label>
+            <label className='text-gray-950 text-sm font-baseFont'>배경</label>
             <div className='flex gap-4 justify-end'>
               <input
                 type='color'
@@ -164,7 +170,7 @@ export default function SettingPage() {
 
           {/* 3. 패널 (Panel) 색상 */}
           <div className='grid grid-cols-[1fr_2fr] items-center gap-4'>
-            <label className='text-gray-950 text-sm font-medium'>패널</label>
+            <label className='text-gray-950 text-sm font-baseFont'>패널</label>
             <div className='flex gap-4 justify-end'>
               <input
                 type='color'
@@ -191,7 +197,7 @@ export default function SettingPage() {
 
           {/* 4. 버블 (Bubble) 색상 */}
           <div className='grid grid-cols-[1fr_2fr] items-center gap-4'>
-            <label className='text-gray-950 text-sm font-medium'>버블</label>
+            <label className='text-gray-950 text-sm font-baseFont'>버블</label>
             <div className='flex gap-4 justify-end'>
               <input
                 type='color'
@@ -218,7 +224,7 @@ export default function SettingPage() {
         </div>
 
         {/* === 글꼴 설정 영역 === */}
-        <h2 className='text-xl font-bold text-gray-950 mt-6 border-b pb-2'>
+        <h2 className='text-xl font-baseFont font-bold text-gray-950 mt-6 border-b pb-2'>
           글꼴
         </h2>
         <div className='grid grid-cols-2 gap-4'>
@@ -247,7 +253,7 @@ export default function SettingPage() {
         </div>
 
         {/* === 글자 크기 설정 영역 === */}
-        <h2 className='text-xl font-bold text-gray-950 mt-6 border-b pb-2'>
+        <h2 className='text-xl font-baseFont font-bold text-gray-950 mt-6 border-b pb-2'>
           글자 크기 ({fontSize})
         </h2>
         <input
@@ -260,7 +266,7 @@ export default function SettingPage() {
         />
 
         {/* === 미리 보기 영역 === */}
-        <h2 className='text-xl font-bold text-gray-950 mt-6 border-b pb-2'>
+        <h2 className='text-xl font-baseFont font-bold text-gray-950 mt-6 border-b pb-2'>
           미리 보기
         </h2>
         <div
