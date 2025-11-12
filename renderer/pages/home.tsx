@@ -335,7 +335,7 @@ const HomePage: NextPage = () => {
     <div
       className={`w-full min-h-screen flex flex-col ${
         bgAttachmentPath
-          ? 'bg-attachment'
+          ? 'bg-attachment bg-fixed'
           : gradientMode
           ? 'bg-gradient-to-r from-bgTheme to-bgThemeEnd'
           : 'bg-bgTheme'
@@ -487,7 +487,6 @@ const HomePage: NextPage = () => {
                     </div>
                   )}
 
-                  <span className='truncate max-w-[120px]'>{att.fileName}</span>
                   <button
                     onClick={() => handleRemoveAttachment(index)}
                     className='ml-2 text-red-500 hover:text-red-700 transition'

@@ -373,7 +373,7 @@ export default function SettingPage() {
             onClick={handleBackgroundAttachment}
             className='flex items-center gap-2 border font-baseFont text-gray-950 p-2 border-gray-300 rounded-md hover:bg-gray-50 transition'
           >
-            <ImageIcon size={18} />
+            <ImageIcon size={20} />
             첨부파일 선택
           </button>
           {bgAttachmentPath ? (

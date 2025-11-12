@@ -46,7 +46,7 @@ function setupAutoUpdater(mainWindow: BrowserWindow): void {
     log.info('Update available.', info);
     mainWindow.webContents.send(IPC_CHANNEL.UPDATE_MESSAGE, {
       type: 'available',
-      info: `새 업데이트 (v${info.version})가 있습니다. 다운로드를 시작합니다.`,
+      info: `새 업데이트가 있습니다. 다운로드를 시작합니다.`,
       version: info.version,
     });
   });
