@@ -3,7 +3,7 @@
   "name": "my-nextron-app",
   "productName": "TIDA",
   "description": "Moza Made It",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "author": "Yoshihide Shiono <shiono.yoshihide@gmail.com>",
   "main": "app/background.js",
   "scripts": {

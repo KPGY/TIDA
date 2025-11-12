@@ -30,16 +30,22 @@ interface ModeState {
   gradientMode: boolean; // 그라데이션 모드 ON/OFF
 }
 
+interface BackgroundState {
+  bgAttachmentPath: string | null; // 배경 이미지 첨부 파일 경로
+}
+
 // 최종 상태는 모두 통합
 interface SettingState
   extends ThemeColors,
     FontState,
     GradientColors,
+    BackgroundState,
     ModeState {
   setSingleColor: (key: keyof ThemeColors, color: string) => void;
   setSingleGradientColor: (key: keyof GradientColors, color: string) => void; // 그라데이션 끝 색상 설정 함수
   setFontStyle: (key: keyof FontState, value: string) => void;
   setGradientMode: (mode: boolean) => void; // 그라데이션 모드 토글 함수
+  setbgAttachmentPath: (path: string) => void;
 }
 
 // ------------------------------------------
@@ -71,6 +77,10 @@ const defaultMode: ModeState = {
   gradientMode: false,
 };
 
+const defaultBackground = {
+  bgAttachmentPath: '',
+};
+
 // ------------------------------------------
 // 3. 스토어 생성 및 Persist 적용
 // ------------------------------------------
@@ -83,6 +93,7 @@ export const useColorStore = create(
       ...defaultFont,
       ...defaultGradientColors, // ⭐ 그라데이션 색상 추가
       ...defaultMode, // ⭐ 모드 상태 추가 // [색상] 단일 색상 업데이트 함수 (시작 색상)
+      ...defaultBackground,
 
       setSingleColor: (key, color) => {
         console.log(`Zustand: ${key} 색상 변경됨 -> ${color}`);
@@ -102,6 +113,11 @@ export const useColorStore = create(
       setGradientMode: (mode) => {
         console.log(`Zustand: Gradient Mode 변경됨 -> ${mode}`);
         set({ gradientMode: mode });
+      },
+
+      setbgAttachmentPath: (path: string) => {
+        console.log(`Zustand: Background Attachment Path 변경됨 -> ${path}`);
+        set({ bgAttachmentPath: path } as unknown as Partial<SettingState>);
       },
     }),
     {

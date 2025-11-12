@@ -91,7 +91,6 @@ const AutoUpdateStatus: React.FC = () => {
     }
 
     const isDownloaded = updateStatus.type === 'downloaded';
-    const currentVersion = updateStatus.version || '새 버전';
 
     // Tailwind CSS 클래스를 사용하여 UI를 스타일링합니다.
     return (
@@ -123,7 +122,7 @@ const AutoUpdateStatus: React.FC = () => {
             onClick={handleRestartApp}
             className='w-full mt-4 bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-150 shadow-md font-medium'
           >
-            지금 재시작하고 v{currentVersion} 적용하기
+            지금 재시작하기
           </button>
         )}
 

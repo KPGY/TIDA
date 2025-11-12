@@ -1,8 +1,29 @@
 'use client';
-import React, { ChangeEvent, useMemo } from 'react';
+import React, { ChangeEvent, useMemo, useState } from 'react'; // useState 추가
 import Link from 'next/link';
-import { Home, ToggleLeft, ToggleRight, Sparkles } from 'lucide-react';
+import {
+  Home,
+  ToggleLeft,
+  ToggleRight,
+  Sparkles,
+  Image as ImageIcon,
+  X,
+} from 'lucide-react'; // X 아이콘 추가
 import { useColorStore } from '../components/store';
+
+// Electron IPC 통신을 위한 타입 정의
+// window.ipc가 전역에 노출되어 있다고 가정합니다.
+interface ipc {
+  invoke: (channel: string, ...args: any[]) => Promise<any>;
+}
+declare global {
+  interface Window {
+    ipc: ipc;
+  }
+}
+
+// IPC 채널 상수를 명확히 정의
+const IPC_CHANNEL_UPLOAD_BACKGROUND = 'upload-background';
 
 // 시각적 구분을 위한 폰트 옵션 목록
 const fontOptions = [
@@ -41,11 +62,22 @@ export default function SettingPage() {
     baseFont,
     fontSize,
     gradientMode,
+    bgAttachmentPath, // 배경 이미지 경로 상태 가져오기
     setGradientMode,
     setSingleColor,
     setSingleGradientColor,
     setFontStyle, // 폰트 상태 변경 함수
+    setbgAttachmentPath, // 배경 이미지 경로 설정 함수 가져오기
   } = useColorStore();
+
+  // 사용자 피드백을 위한 상태 (Alert 대체)
+  const [feedback, setFeedback] = useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
+
+  // 피드백 메시지를 숨기는 함수
+  const hideFeedback = () => setFeedback(null);
 
   // 글자 크기를 px 단위 문자열에서 숫자(10~30)로 변환
   const currentFontSizeValue = useMemo(() => {
@@ -76,6 +108,90 @@ export default function SettingPage() {
 
   const isEndColorDisabled = !gradientMode;
 
+  /**
+   * 배경 이미지 첨부 버튼 클릭 핸들러
+   * Electron IPC를 호출하여 파일 선택 및 복사를 요청합니다.
+   */
+  const handleBackgroundAttachment = async () => {
+    console.log('--- handleBackgroundAttachment 실행됨 ---');
+    setFeedback(null); // 이전 피드백 초기화
+
+    if (typeof window !== 'undefined' && window.ipc) {
+      console.log('IPC: Invoking', IPC_CHANNEL_UPLOAD_BACKGROUND); // IPC 호출 전 로그
+      try {
+        // IPC 채널 상수를 사용
+        const result = await window.ipc.invoke(IPC_CHANNEL_UPLOAD_BACKGROUND);
+
+        if (result.success && result.files && result.files.length > 0) {
+          // 배경 이미지는 단일 파일만 지원하므로 첫 번째 파일의 경로만 사용
+          const filePath = result.files[0].filePath;
+          setbgAttachmentPath(filePath); // Zustand에 경로 저장
+          setFeedback({
+            message: '배경 이미지가 성공적으로 설정되었습니다.',
+            type: 'success',
+          });
+          console.log('Background Image Path Saved:', filePath);
+        } else if (result.error === 'User cancelled file selection') {
+          console.log('User cancelled file selection.');
+        } else {
+          // IPC 호출은 성공했으나 파일 복사 등의 내부 오류 발생 시
+          console.error('File upload failed:', result.error);
+          setFeedback({
+            message: `파일 업로드 실패: ${result.error}`,
+            type: 'error',
+          });
+        }
+      } catch (error) {
+        // IPC 호출 자체가 실패 (채널 이름 오류, 메인 프로세스 응답 없음 등)
+        console.error('IPC invoke error (IPC 통신 실패):', error);
+        setFeedback({
+          message:
+            '파일 업로드 요청 중 예기치 않은 오류가 발생했습니다. 콘솔을 확인하십시오.',
+          type: 'error',
+        });
+      }
+    } else {
+      // Electron 환경이 아닐 경우
+      console.warn('IPC Renderer is not available. Skipping file upload.');
+      setFeedback({
+        message: '경고: Electron 환경이 아닙니다. IPC 호출을 건너뜁니다.',
+        type: 'error',
+      });
+    }
+  };
+
+  /**
+   * 배경 이미지 제거 핸들러
+   */
+  const handleRemoveBackgroundAttachment = () => {
+    setbgAttachmentPath(''); // 경로를 빈 문자열로 설정하여 제거
+    setFeedback({ message: '배경 이미지가 제거되었습니다.', type: 'success' });
+    console.log('Background Image Path Removed.');
+  };
+
+  // 배경 이미지 미리보기 스타일
+  const backgroundStyle = {
+    fontFamily: baseFont,
+    fontSize: fontSize,
+    // 배경 이미지가 설정되어 있으면 CSS background-image 속성을 사용
+    ...(bgAttachmentPath
+      ? {
+          // attachment-asset:// 프로토콜을 사용하여 로컬 파일에 접근 (database.ts에서 등록됨)
+          backgroundImage: `url(attachment-asset://${encodeURIComponent(
+            bgAttachmentPath
+          )})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }
+      : {
+          // 배경 이미지가 없으면 테마 색상 적용
+          background: gradientMode
+            ? `linear-gradient(to right, ${bgTheme}, ${bgThemeEnd})`
+            : bgTheme,
+        }),
+  };
+
   return (
     <React.Fragment>
       <header className='flex p-4 justify-between items-center bg-gray-50 shadow-sm app-drag fixed top-0 z-10 w-full'>
@@ -88,10 +204,35 @@ export default function SettingPage() {
         </Link>
       </header>
 
+      {/* === 피드백 메시지 (Alert 대체) === */}
+      {feedback && (
+        <div
+          className={`fixed top-16 left-1/2 transform -translate-x-1/2 z-50 p-3 rounded-lg shadow-xl flex items-center gap-3 transition-all duration-300 ${
+            feedback.type === 'success'
+              ? 'bg-green-500 text-white'
+              : 'bg-red-500 text-white'
+          }`}
+          role='alert'
+        >
+          {feedback.type === 'success' ? (
+            <Sparkles size={20} />
+          ) : (
+            <X size={20} />
+          )}
+          <span className='font-bold'>{feedback.message}</span>
+          <button
+            onClick={hideFeedback}
+            className='ml-4 opacity-70 hover:opacity-100 transition'
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
       <main className='flex flex-col gap-6 p-4 md:p-8 max-w-4xl mx-auto mt-16'>
         {/* === 색상 설정 영역 (2x2 Grid) === */}
         <div className='flex justify-between items-center border-b'>
-          <h2 className='text-xl font-baseFont font-bold text-gray-950  pb-2'>
+          <h2 className='text-xl font-baseFont font-bold text-gray-950  pb-2'>
             테마 색상
           </h2>
           <button
@@ -223,6 +364,38 @@ export default function SettingPage() {
           </div>
         </div>
 
+        {/* === 배경 이미지 설정 영역 === */}
+        <h2 className='text-xl font-baseFont font-bold text-gray-950 border-b pb-2'>
+          배경 이미지
+        </h2>
+        <div className='flex items-center gap-4'>
+          <button
+            onClick={handleBackgroundAttachment}
+            className='flex items-center gap-2 border font-baseFont text-gray-950 p-2 border-gray-300 rounded-md hover:bg-gray-50 transition'
+          >
+            <ImageIcon size={18} />
+            첨부파일 선택
+          </button>
+          {bgAttachmentPath ? (
+            <button
+              onClick={handleRemoveBackgroundAttachment}
+              className='text-red-600 border font-baseFont border-red-300 p-2 rounded-md hover:bg-red-50 transition text-sm'
+            >
+              배경 이미지 제거
+            </button>
+          ) : (
+            <p className='text-gray-500 text-sm'>
+              현재 설정된 배경 이미지가 없습니다.
+            </p>
+          )}
+        </div>
+
+        {bgAttachmentPath && (
+          <div className='text-sm text-gray-700 truncate p-2 font-baseFont bg-gray-100 rounded-md'>
+            현재 경로: {bgAttachmentPath}
+          </div>
+        )}
+
         {/* === 글꼴 설정 영역 === */}
         <h2 className='text-xl font-baseFont font-bold text-gray-950 mt-6 border-b pb-2'>
           글꼴
@@ -270,15 +443,12 @@ export default function SettingPage() {
           미리 보기
         </h2>
         <div
-          className={`border border-gray-300 ${
-            gradientMode
-              ? 'bg-gradient-to-r from-bgTheme to-bgThemeEnd'
-              : 'bg-bgTheme'
-          } rounded-md mb-4 h-40 p-4 flex flex-col justify-center items-center`}
+          className={`border border-gray-300 rounded-md mb-4 h-40 p-4 flex flex-col justify-center items-center overflow-hidden`}
           // 배경색과 폰트 스타일을 직접 적용하여 미리보기
+          style={backgroundStyle} // 업데이트된 backgroundStyle 적용
         >
           <p
-            className={`text-gray-950 text-dynamic font-normal`}
+            className={`text-gray-950 text-dynamic font-normal text-center bg-white/70 backdrop-blur-sm p-2 rounded-md`}
             style={{
               fontFamily: baseFont,
               // 글자 크기 적용
