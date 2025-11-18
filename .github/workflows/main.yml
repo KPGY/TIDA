@@ -31,8 +31,6 @@ jobs:
           # Git 작업(버전 커밋 및 태그)을 위한 사용자 정보 설정
           git config user.name "GitHub Actions Bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      ---
       
       # 1. 버전 증가 및 태그 생성
       # package.json의 버전을 올리고, Git에 커밋하며, 새 태그를 생성합니다.
@@ -44,8 +42,6 @@ jobs:
       # nextron build가 릴리즈를 생성할 때 사용할 수 있도록 태그를 GitHub에 전송합니다.
       - name: 🚀 Push Commits and Tags
         run: git push && git push --tags
-        
-      ---
 
       # 3. nextron build 실행 및 즉시 GitHub에 릴리즈 발행 (Publish)
       # package.json에 정의된 'npm run release' 명령어(nextron build -- --publish always) 실행
