@@ -55,8 +55,18 @@ jobs:
       # 4. 🚀 Push Commits and Tags: 모든 변경사항(lockfile 커밋, version 커밋)과 태그 푸시
       - name: 🚀 Push Commits and Tags
         run: git push && git push --tags
+
+      # 🚨 5. 빌드 환경 준비: app-builder 실행 권한 부여 및 Linux 종속성 설치 (ERR_ELECTRON_BUILDER_CANNOT_EXECUTE 해결)
+      - name: ⚙️ Prepare Electron Builder Environment
+        run: |
+          # app-builder 실행 권한 부여
+          chmod +x ./node_modules/app-builder-bin/linux/x64/app-builder
+          
+          # 필수 시스템 종속성 설치 (Linux 빌드 안정성 확보)
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y icnsutils graphicsmagick xz-utils
               
-      # 5. 📦 Build and Publish Nextron App: 릴리즈 발행
+      # 6. 📦 Build and Publish Nextron App: 릴리즈 발행
       - name: 📦 Build and Publish Nextron App
         run: npm run release
         env:
