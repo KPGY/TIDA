@@ -29,46 +29,37 @@ jobs:
       - name: 📥 Install dependencies
         run: npm install
         
-      # 🚨 1. Git User 설정: 모든 커밋 전에 반드시 실행되어야 합니다.
+      # 1. Git User 설정
       - name: ⚙️ Configure Git User
         run: |
-          # Git 작업(버전 커밋 및 태그)을 위한 사용자 정보 설정
+          # Git 작업(커밋 및 태그)을 위한 사용자 정보 설정
           git config user.name "GitHub Actions Bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
-      # 2. 💾 Commit Lockfile Changes: npm install로 인한 변경사항 커밋
+      # 2. Commit Lockfile Changes: npm install로 인한 변경사항 커밋
       - name: 💾 Commit Lockfile Changes
         run: |
           if git diff --quiet; then
             echo "No lockfile changes detected. Proceeding."
           else
             echo "Lockfile changes detected. Committing them now."
-            # Git User가 설정되어 있어 커밋이 가능합니다.
             git add .
             git commit -m "chore: lockfile update from npm install (auto)"
           fi
           
-      # 3. ⬆️ Increment Version and Tag: npm version 명령 실행 (내부적으로 커밋을 수행)
+      # 3. Increment Version and Tag: npm version 명령 실행
       - name: ⬆️ Increment Version and Tag
         run: npm version patch 
                
-      # 4. 🚀 Push Commits and Tags: 모든 변경사항(lockfile 커밋, version 커밋)과 태그 푸시
+      # 4. Push Commits and Tags: 모든 변경사항과 태그 푸시
       - name: 🚀 Push Commits and Tags
         run: git push && git push --tags
-
-      # 🚨 5. 빌드 환경 준비: app-builder 실행 권한 부여 및 Linux 종속성 설치 (ERR_ELECTRON_BUILDER_CANNOT_EXECUTE 해결)
-      - name: ⚙️ Prepare Electron Builder Environment
-        run: |
-          # app-builder 실행 권한 부여
-          chmod +x ./node_modules/app-builder-bin/linux/x64/app-builder
-          
-          # 필수 시스템 종속성 설치 (Linux 빌드 안정성 확보)
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -y icnsutils graphicsmagick xz-utils
               
-      # 6. 📦 Build and Publish Nextron App: 릴리즈 발행
-      - name: 📦 Build and Publish Nextron App
-        run: npm run release
-        env:
-          # electron-builder가 릴리즈를 생성하고 파일을 업로드하는 데 사용됩니다.
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # 5. Build and Publish: Docker 기반 electron-builder 액션을 사용하여 빌드 및 발행
+      - name: 📦 Build and Publish Nextron App (Using Docker)
+        uses: samuelmeuli/action-electron-builder@v1
+        with:
+          # package.json의 "release" 스크립트를 실행합니다. (nextron build -- --publish always)
+          build_script_name: release 
+          # GitHub 토큰을 전달하여 릴리즈 생성 및 파일 업로드 권한을 부여합니다.
+          github_token: ${{ secrets.GITHUB_TOKEN }}
