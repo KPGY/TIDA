@@ -17,10 +17,14 @@ function MyApp({ Component, pageProps }: AppProps) {
     baseFont,
     fontSize,
     bgAttachmentPath,
+    opacityLevel,
   } = useColorStore();
 
   useEffect(() => {
     const rootStyle = document.documentElement.style; // 1. 색상 변수 설정
+
+    const opacityValue = parseFloat(opacityLevel) / 100;
+    rootStyle.setProperty('opacity', opacityValue.toString());
 
     rootStyle.setProperty('--color-bg', bgTheme);
     rootStyle.setProperty('--color-bubble', bubbleTheme);
@@ -30,7 +34,6 @@ function MyApp({ Component, pageProps }: AppProps) {
     rootStyle.setProperty('--color-bubble-end', bubbleThemeEnd);
     rootStyle.setProperty('--color-panel-end', panelThemeEnd);
     rootStyle.setProperty('--color-main-end', mainThemeEnd); // 2. 글꼴 변수 설정
-
     rootStyle.setProperty('--base-font-family', baseFont);
     rootStyle.setProperty('--font-size', fontSize); // 3. ⭐ 배경 이미지 경로 변수 설정 (경로 변환 및 인코딩 처리)
 
@@ -58,6 +61,7 @@ function MyApp({ Component, pageProps }: AppProps) {
     panelThemeEnd,
     mainThemeEnd,
     bgAttachmentPath,
+    opacityLevel,
   ]); // ⭐️ Component를 바로 반환합니다.
 
   return <Component {...pageProps} />;

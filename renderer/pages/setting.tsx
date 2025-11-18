@@ -113,11 +113,9 @@ export default function SettingPage() {
    * Electron IPC를 호출하여 파일 선택 및 복사를 요청합니다.
    */
   const handleBackgroundAttachment = async () => {
-    console.log('--- handleBackgroundAttachment 실행됨 ---');
     setFeedback(null); // 이전 피드백 초기화
 
     if (typeof window !== 'undefined' && window.ipc) {
-      console.log('IPC: Invoking', IPC_CHANNEL_UPLOAD_BACKGROUND); // IPC 호출 전 로그
       try {
         // IPC 채널 상수를 사용
         const result = await window.ipc.invoke(IPC_CHANNEL_UPLOAD_BACKGROUND);
@@ -130,7 +128,6 @@ export default function SettingPage() {
             message: '배경 이미지가 성공적으로 설정되었습니다.',
             type: 'success',
           });
-          console.log('Background Image Path Saved:', filePath);
         } else if (result.error === 'User cancelled file selection') {
           console.log('User cancelled file selection.');
         } else {
@@ -166,34 +163,10 @@ export default function SettingPage() {
   const handleRemoveBackgroundAttachment = () => {
     setbgAttachmentPath(''); // 경로를 빈 문자열로 설정하여 제거
     setFeedback({ message: '배경 이미지가 제거되었습니다.', type: 'success' });
-    console.log('Background Image Path Removed.');
-  };
-
-  // 배경 이미지 미리보기 스타일
-  const backgroundStyle = {
-    fontFamily: baseFont,
-    fontSize: fontSize,
-    // 배경 이미지가 설정되어 있으면 CSS background-image 속성을 사용
-    ...(bgAttachmentPath
-      ? {
-          // attachment-asset:// 프로토콜을 사용하여 로컬 파일에 접근 (database.ts에서 등록됨)
-          backgroundImage: `url(attachment-asset://${encodeURIComponent(
-            bgAttachmentPath
-          )})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }
-      : {
-          // 배경 이미지가 없으면 테마 색상 적용
-          background: gradientMode
-            ? `linear-gradient(to right, ${bgTheme}, ${bgThemeEnd})`
-            : bgTheme,
-        }),
   };
 
   return (
-    <React.Fragment>
+    <div>
       <header className='flex p-4 justify-between items-center bg-gray-50 shadow-sm app-drag fixed top-0 z-10 w-full'>
         <h1 className='text-lg font-baseFont text-gray-800'>설정</h1>
         <Link
@@ -229,7 +202,7 @@ export default function SettingPage() {
         </div>
       )}
 
-      <main className='flex flex-col gap-6 p-4 md:p-8 max-w-4xl mx-auto mt-16'>
+      <main className='flex flex-col gap-6 p-4 md:p-8 max-w-4xl mx-auto mt-14 bg-gray-50'>
         {/* === 색상 설정 영역 (2x2 Grid) === */}
         <div className='flex justify-between items-center border-b'>
           <h2 className='text-xl font-baseFont font-bold text-gray-950  pb-2'>
@@ -443,9 +416,14 @@ export default function SettingPage() {
           미리 보기
         </h2>
         <div
-          className={`border border-gray-300 rounded-md mb-4 h-40 p-4 flex flex-col justify-center items-center overflow-hidden`}
+          className={`border border-gray-300 rounded-md mb-4 h-40 p-4 ${
+            bgAttachmentPath
+              ? 'bg-attachment'
+              : gradientMode
+              ? 'bg-gradient-to-r from-bgTheme to-bgThemeEnd'
+              : 'bg-bgTheme'
+          } flex flex-col justify-center items-center overflow-hidden`}
           // 배경색과 폰트 스타일을 직접 적용하여 미리보기
-          style={backgroundStyle} // 업데이트된 backgroundStyle 적용
         >
           <p
             className={`text-gray-950 text-dynamic font-normal text-center bg-white/70 backdrop-blur-sm p-2 rounded-md`}
@@ -460,6 +438,6 @@ export default function SettingPage() {
           </p>
         </div>
       </main>
-    </React.Fragment>
+    </div>
   );
 }

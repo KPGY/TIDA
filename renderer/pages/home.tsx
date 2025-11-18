@@ -169,7 +169,8 @@ const HomePage: NextPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentViewPath, setCurrentViewPath] = useState<string | null>(null);
 
-  const { gradientMode, bgAttachmentPath } = useColorStore();
+  const { gradientMode, bgAttachmentPath, opacityLevel, setOpacityLevel } =
+    useColorStore();
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -226,13 +227,17 @@ const HomePage: NextPage = () => {
 
   const handleOpenFile = (filePath: string) => {
     // TODO: 메인 프로세스에 파일 열기 명령을 IPC로 보냄 (예: shell.openPath)
-    console.log(`Open request for: ${filePath}`);
+
     // await window.ipc.invoke('open-file', filePath);
     setCurrentViewPath(filePath);
     // 2. 모달 열기 플래그를 true로 설정
     setIsModalOpen(true);
   };
 
+  const handleOpacityChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const newOpacity = event.target.value;
+    setOpacityLevel(newOpacity);
+  };
   useEffect(() => {
     inputRef.current?.focus();
 
@@ -352,6 +357,15 @@ const HomePage: NextPage = () => {
         <p className='text-gray-900 text-dynamic font-baseFont'>
           {formattedHeaderDate}
         </p>
+        <input
+          type='range'
+          min={10}
+          max={100}
+          step={5}
+          value={opacityLevel}
+          onChange={handleOpacityChange}
+          className='w-20 h-1 cursor-pointer accent-mainTheme app-no-drag'
+        />
         <div className='flex gap-4 app-no-drag items-center'>
           <button
             className='text-mainTheme font-baseFont text-dynamic font-bold'
@@ -359,11 +373,7 @@ const HomePage: NextPage = () => {
           >
             Today
           </button>
-          <Search
-            size={20}
-            className='text-mainTheme cursor-pointer'
-            onClick={() => console.log('검색 기능 미구현')}
-          />
+          <Search size={20} className='text-mainTheme cursor-pointer' />
           <Calendar size={20} className='text-mainTheme cursor-pointer' />
           <Link href='/setting'>
             <Settings size={20} className='text-mainTheme cursor-pointer' />

@@ -10,6 +10,7 @@ interface ThemeColors {
   bubbleTheme: string;
   panelTheme: string;
   mainTheme: string;
+  opacityLevel: string; // 선택적 불투명도 속성
 }
 
 interface FontState {
@@ -46,6 +47,7 @@ interface SettingState
   setFontStyle: (key: keyof FontState, value: string) => void;
   setGradientMode: (mode: boolean) => void; // 그라데이션 모드 토글 함수
   setbgAttachmentPath: (path: string) => void;
+  setOpacityLevel: (opacity: string) => void;
 }
 
 // ------------------------------------------
@@ -57,6 +59,7 @@ const defaultColors: ThemeColors = {
   bubbleTheme: '#000000',
   panelTheme: '#F5F5F5',
   mainTheme: '#3B82F6',
+  opacityLevel: '100',
 };
 
 // ⭐ 2-1. 그라데이션 끝 색상 기본값 (시작 색상과 동일하게 설정)
@@ -96,28 +99,27 @@ export const useColorStore = create(
       ...defaultBackground,
 
       setSingleColor: (key, color) => {
-        console.log(`Zustand: ${key} 색상 변경됨 -> ${color}`);
         set({ [key]: color } as unknown as Partial<SettingState>);
       }, // ⭐ [색상] 단일 그라데이션 끝 색상 업데이트 함수
 
       setSingleGradientColor: (key, color) => {
-        console.log(`Zustand: ${key} (End) 색상 변경됨 -> ${color}`);
         set({ [key]: color } as unknown as Partial<SettingState>);
       }, // [글꼴] 글꼴 스타일(클래스 또는 크기) 업데이트 함수
 
       setFontStyle: (key, value) => {
-        console.log(`Zustand: ${key} 설정 변경됨 -> ${value}`);
         set({ [key]: value } as unknown as Partial<SettingState>);
       }, // ⭐ [모드] 그라데이션 모드 토글 함수
 
       setGradientMode: (mode) => {
-        console.log(`Zustand: Gradient Mode 변경됨 -> ${mode}`);
         set({ gradientMode: mode });
       },
 
       setbgAttachmentPath: (path: string) => {
-        console.log(`Zustand: Background Attachment Path 변경됨 -> ${path}`);
         set({ bgAttachmentPath: path } as unknown as Partial<SettingState>);
+      },
+
+      setOpacityLevel: (opacity: string) => {
+        set({ opacityLevel: opacity } as unknown as Partial<SettingState>);
       },
     }),
     {

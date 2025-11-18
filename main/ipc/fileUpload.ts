@@ -3,20 +3,25 @@ import fs from 'fs';
 import path from 'path';
 import log from 'electron-log';
 import { IPC_CHANNEL } from './channels';
+// IPC_CHANNEL 정의는 그대로 유지됩니다.
+// import { IPC_CHANNEL } from './channels';
 
 // 파일 업로드 및 복사 로직을 처리하는 헬퍼 함수
 export async function handleFileUpload(
   event: Electron.IpcMainInvokeEvent,
-  multiSelections: boolean
+  multiSelections: boolean,
+  subDirectory: string // 👈 새 매개변수: 저장할 서브 폴더 이름 (예: 'background', 'chat')
 ) {
   const window = BrowserWindow.fromWebContents(event.sender);
   if (!window) return { success: false, error: 'Window not found' };
 
+  // 1. 다이얼로그 설정
   const properties: ('openFile' | 'multiSelections')[] = ['openFile'];
   if (multiSelections) {
     properties.push('multiSelections');
   }
 
+  // 2. 파일 선택 다이얼로그 열기
   const result = await dialog.showOpenDialog(window, {
     properties: properties,
     title: '첨부파일 선택',
@@ -30,10 +35,17 @@ export async function handleFileUpload(
     return { success: false, error: 'User cancelled file selection' };
   }
 
+  // 3. 파일 복사 및 저장
   try {
-    const attachmentsDir = path.join(app.getPath('userData'), 'attachments');
-    if (!fs.existsSync(attachmentsDir)) {
-      fs.mkdirSync(attachmentsDir, { recursive: true });
+    // 기본 저장 경로: userData/attachments
+    const baseDir = path.join(app.getPath('userData'), 'attachments');
+
+    // 최종 저장 경로: userData/attachments/<subDirectory>
+    const destinationDir = path.join(baseDir, subDirectory);
+
+    // 서브 폴더를 포함하여 경로가 없으면 생성
+    if (!fs.existsSync(destinationDir)) {
+      fs.mkdirSync(destinationDir, { recursive: true });
     }
 
     const uploadedFiles = result.filePaths.map((originalPath) => {
@@ -41,15 +53,20 @@ export async function handleFileUpload(
       const timestamp = Date.now();
       const extension = path.extname(originalFileName);
       const baseName = path.basename(originalFileName, extension);
-      const newFileName = `${baseName}_${timestamp}${extension}`;
-      const destinationPath = path.join(attachmentsDir, newFileName);
 
+      // 파일명 중복 방지를 위해 타임스탬프 추가
+      const newFileName = `${baseName}_${timestamp}${extension}`;
+
+      // 최종 파일 저장 경로
+      const destinationPath = path.join(destinationDir, newFileName);
+
+      // 파일 복사 실행
       fs.copyFileSync(originalPath, destinationPath);
       log.info(`File uploaded and copied to: ${destinationPath}`);
 
       return {
-        filePath: destinationPath,
-        fileName: originalFileName,
+        filePath: destinationPath, // 저장된 파일의 전체 경로
+        fileName: originalFileName, // 원본 파일 이름
       };
     });
 
@@ -65,16 +82,18 @@ export async function handleFileUpload(
 
 /**
  * 모든 파일 업로드 관련 IPC 핸들러를 등록합니다.
- * UPLOAD_BACKGROUND (단일 선택) 및 UPLOAD_ATTACHMENT (다중 선택)를 포함합니다.
+ * UPLOAD_BACKGROUND는 'background' 폴더에, UPLOAD_ATTACHMENT는 'chat' 폴더에 저장합니다.
  */
 export function initializeFileUploaderIPC() {
   // 1. IPC: 배경 이미지 업로드 (단일 파일)
   ipcMain.handle(IPC_CHANNEL.UPLOAD_BACKGROUND, (event) => {
-    return handleFileUpload(event, false); // multiSelections: false
+    // multiSelections: false, subDirectory: 'background' 지정
+    return handleFileUpload(event, false, 'background');
   });
 
-  // 2. IPC: 첨부파일 업로드 (멀티 파일 지원) - database.ts에서 이관됨
+  // 2. IPC: 첨부파일 업로드 (멀티 파일 지원) - 채팅 첨부파일
   ipcMain.handle(IPC_CHANNEL.UPLOAD_ATTACHMENT, (event) => {
-    return handleFileUpload(event, true); // multiSelections: true
+    // multiSelections: true, subDirectory: 'chat' 지정
+    return handleFileUpload(event, true, 'chat');
   });
 }

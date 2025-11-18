@@ -50,7 +50,6 @@ const AutoUpdateStatus: React.FC = () => {
         'type' in message
       ) {
         setUpdateStatus(message as UpdateStatus);
-        console.log('[Updater] Message Received:', message);
       }
     };
 

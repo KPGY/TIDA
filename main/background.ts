@@ -47,6 +47,7 @@ initializeFileUploaderIPC();
     width: 450,
     height: 900,
     frame: false,
+    transparent: true,
     alwaysOnTop: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
