@@ -29,35 +29,34 @@ jobs:
       - name: 📥 Install dependencies
         run: npm install
         
-      # 🚨 Git Working Directory Not Clean 오류 해결 스텝 추가
-      - name: 💾 Commit Lockfile Changes
-        run: |
-          # npm install로 인해 변경된 package-lock.json 또는 yarn.lock 파일을 커밋합니다.
-          if git diff --quiet; then
-            echo "No lockfile changes detected. Proceeding."
-          else
-            echo "Lockfile changes detected. Committing them now."
-            # 변경된 파일을 스테이징하고 커밋합니다.
-            git add .
-            git commit -m "chore: lockfile update from npm install (auto)"
-          fi
-          
+      # 🚨 1. Git User 설정: 모든 커밋 전에 반드시 실행되어야 합니다.
       - name: ⚙️ Configure Git User
         run: |
           # Git 작업(버전 커밋 및 태그)을 위한 사용자 정보 설정
           git config user.name "GitHub Actions Bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
-      # 1. 버전 증가 및 태그 생성
+      # 2. 💾 Commit Lockfile Changes: npm install로 인한 변경사항 커밋
+      - name: 💾 Commit Lockfile Changes
+        run: |
+          if git diff --quiet; then
+            echo "No lockfile changes detected. Proceeding."
+          else
+            echo "Lockfile changes detected. Committing them now."
+            # Git User가 설정되어 있어 커밋이 가능합니다.
+            git add .
+            git commit -m "chore: lockfile update from npm install (auto)"
+          fi
+          
+      # 3. ⬆️ Increment Version and Tag: npm version 명령 실행 (내부적으로 커밋을 수행)
       - name: ⬆️ Increment Version and Tag
-        # 'patch' 버전을 올리고, Git에 커밋하며, 새 태그를 생성합니다.
         run: npm version patch 
                
-      # 2. 커밋과 태그를 원격 저장소에 푸시
+      # 4. 🚀 Push Commits and Tags: 모든 변경사항(lockfile 커밋, version 커밋)과 태그 푸시
       - name: 🚀 Push Commits and Tags
         run: git push && git push --tags
               
-      # 3. nextron build 실행 및 즉시 GitHub에 릴리즈 발행 (Publish)
+      # 5. 📦 Build and Publish Nextron App: 릴리즈 발행
       - name: 📦 Build and Publish Nextron App
         run: npm run release
         env:
