@@ -10,41 +10,54 @@ jobs:
   release:
     runs-on: ubuntu-latest
     
-    # ❗️ 릴리즈 생성 및 파일 업로드를 위해 권한 설정
+    # ❗️ 릴리즈 생성 및 파일 업로드를 위해 권한 설정 (필수)
     permissions:
-      contents: write # 릴리즈 생성 및 파일 업로드, 태그 푸시에 필요
+      contents: write 
       
     steps:
       - name: ⬇️ Checkout code
         uses: actions/checkout@v4
+        with:
+          # npm version 명령을 위해 전체 커밋 기록을 가져옵니다.
+          fetch-depth: 0 
         
       - name: 🛠️ Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # 프로젝트에 맞는 Node.js 버전으로 설정
+          node-version: '20' 
 
       - name: 📥 Install dependencies
         run: npm install
+        
+      # 🚨 Git Working Directory Not Clean 오류 해결 스텝 추가
+      - name: 💾 Commit Lockfile Changes
+        run: |
+          # npm install로 인해 변경된 package-lock.json 또는 yarn.lock 파일을 커밋합니다.
+          if git diff --quiet; then
+            echo "No lockfile changes detected. Proceeding."
+          else
+            echo "Lockfile changes detected. Committing them now."
+            # 변경된 파일을 스테이징하고 커밋합니다.
+            git add .
+            git commit -m "chore: lockfile update from npm install (auto)"
+          fi
           
       - name: ⚙️ Configure Git User
         run: |
           # Git 작업(버전 커밋 및 태그)을 위한 사용자 정보 설정
           git config user.name "GitHub Actions Bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-      
+          
       # 1. 버전 증가 및 태그 생성
-      # package.json의 버전을 올리고, Git에 커밋하며, 새 태그를 생성합니다.
       - name: ⬆️ Increment Version and Tag
-        # 예시로 'patch' 버전을 올리지만, 'minor' 또는 'major'로 변경 가능합니다.
+        # 'patch' 버전을 올리고, Git에 커밋하며, 새 태그를 생성합니다.
         run: npm version patch 
-        
+               
       # 2. 커밋과 태그를 원격 저장소에 푸시
-      # nextron build가 릴리즈를 생성할 때 사용할 수 있도록 태그를 GitHub에 전송합니다.
       - name: 🚀 Push Commits and Tags
         run: git push && git push --tags
-
+              
       # 3. nextron build 실행 및 즉시 GitHub에 릴리즈 발행 (Publish)
-      # package.json에 정의된 'npm run release' 명령어(nextron build -- --publish always) 실행
       - name: 📦 Build and Publish Nextron App
         run: npm run release
         env:
