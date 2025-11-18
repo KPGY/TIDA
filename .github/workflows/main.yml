@@ -1,0 +1,56 @@
+name: Automatic Nextron Release
+
+# master 브랜치에 푸시될 때 실행
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    # ❗️ 릴리즈 생성 및 파일 업로드를 위해 권한 설정
+    permissions:
+      contents: write # 릴리즈 생성 및 파일 업로드, 태그 푸시에 필요
+      
+    steps:
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🛠️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # 프로젝트에 맞는 Node.js 버전으로 설정
+
+      - name: 📥 Install dependencies
+        run: npm install
+          
+      - name: ⚙️ Configure Git User
+        run: |
+          # Git 작업(버전 커밋 및 태그)을 위한 사용자 정보 설정
+          git config user.name "GitHub Actions Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      ---
+      
+      # 1. 버전 증가 및 태그 생성
+      # package.json의 버전을 올리고, Git에 커밋하며, 새 태그를 생성합니다.
+      - name: ⬆️ Increment Version and Tag
+        # 예시로 'patch' 버전을 올리지만, 'minor' 또는 'major'로 변경 가능합니다.
+        run: npm version patch 
+        
+      # 2. 커밋과 태그를 원격 저장소에 푸시
+      # nextron build가 릴리즈를 생성할 때 사용할 수 있도록 태그를 GitHub에 전송합니다.
+      - name: 🚀 Push Commits and Tags
+        run: git push && git push --tags
+        
+      ---
+
+      # 3. nextron build 실행 및 즉시 GitHub에 릴리즈 발행 (Publish)
+      # package.json에 정의된 'npm run release' 명령어(nextron build -- --publish always) 실행
+      - name: 📦 Build and Publish Nextron App
+        run: npm run release
+        env:
+          # electron-builder가 릴리즈를 생성하고 파일을 업로드하는 데 사용됩니다.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
