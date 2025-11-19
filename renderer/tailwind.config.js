@@ -1,4 +1,5 @@
 /** @type {import('tailwindcss').Config} */
+import { text } from 'stream/consumers';
 import plugin from 'tailwindcss/plugin';
 
 export const content = [
@@ -8,7 +9,7 @@ export const content = [
 export const theme = {
   extend: {
     colors: {
-      // Tailwind 클래스: bg-bgTheme, text-mainTheme 등으로 사용 가능
+      // 배경 및 그라데이션 색상 변수
       bgTheme: 'var(--color-bg)',
       bubbleTheme: 'var(--color-bubble)',
       panelTheme: 'var(--color-panel)',
@@ -17,6 +18,13 @@ export const theme = {
       bubbleThemeEnd: 'var(--color-bubble-end)',
       panelThemeEnd: 'var(--color-panel-end)',
       mainThemeEnd: 'var(--color-main-end)',
+
+      // ⭐ [추가됨] 대비에 따라 자동 조정되는 텍스트 색상 변수
+      // 이제 컴포넌트에서 text-textBubbleTheme 등으로 사용 가능합니다.
+      textBubbleTheme: 'var(--text-bubble)',
+      textPanelTheme: 'var(--text-panel)',
+      textMainTheme: 'var(--text-main)',
+      textBgTheme: 'var(--text-bg)',
     },
 
     fontFamily: {

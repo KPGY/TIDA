@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { getContrastMode } from './textColor';
 
 // ------------------------------------------
 // 1. 인터페이스 정의: 색상, 글꼴, 그리고 그라데이션 상태
@@ -9,8 +10,7 @@ interface ThemeColors {
   bgTheme: string;
   bubbleTheme: string;
   panelTheme: string;
-  mainTheme: string;
-  opacityLevel: string; // 선택적 불투명도 속성
+  mainTheme: string; // 예: 버튼 색상
 }
 
 interface FontState {
@@ -18,7 +18,6 @@ interface FontState {
   fontSize: string;
 }
 
-// ⭐ 1-1. 그라데이션 색상 상태 추가
 interface GradientColors {
   bgThemeEnd: string;
   bubbleThemeEnd: string;
@@ -26,7 +25,6 @@ interface GradientColors {
   mainThemeEnd: string;
 }
 
-// ⭐ 1-2. 모드 토글 상태 추가
 interface ModeState {
   gradientMode: boolean; // 그라데이션 모드 ON/OFF
 }
@@ -35,34 +33,41 @@ interface BackgroundState {
   bgAttachmentPath: string | null; // 배경 이미지 첨부 파일 경로
 }
 
-// 최종 상태는 모두 통합
+// ⭐ 새로 추가된: 대비 모드 상태
+interface ContrastState {
+  bgTextMode: 'light' | 'dark';
+  bubbleTextMode: 'light' | 'dark';
+  panelTextMode: 'light' | 'dark';
+  mainTextMode: 'light' | 'dark';
+}
+
+// 최종 상태 통합
 interface SettingState
   extends ThemeColors,
     FontState,
     GradientColors,
     BackgroundState,
-    ModeState {
+    ModeState,
+    ContrastState {
+  // ⭐ 통합
   setSingleColor: (key: keyof ThemeColors, color: string) => void;
-  setSingleGradientColor: (key: keyof GradientColors, color: string) => void; // 그라데이션 끝 색상 설정 함수
+  setSingleGradientColor: (key: keyof GradientColors, color: string) => void;
   setFontStyle: (key: keyof FontState, value: string) => void;
-  setGradientMode: (mode: boolean) => void; // 그라데이션 모드 토글 함수
+  setGradientMode: (mode: boolean) => void;
   setbgAttachmentPath: (path: string) => void;
-  setOpacityLevel: (opacity: string) => void;
 }
 
-// ------------------------------------------
-// 2. 기본값 정의
-// ------------------------------------------
+// ==========================================
+// 3. 기본값 정의
+// ==========================================
 
 const defaultColors: ThemeColors = {
-  bgTheme: '#FFFFFF',
-  bubbleTheme: '#000000',
-  panelTheme: '#F5F5F5',
-  mainTheme: '#3B82F6',
-  opacityLevel: '100',
+  bgTheme: '#FFFFFF', // 밝은 배경 기본값
+  bubbleTheme: '#000000', // 어두운 버블 기본값
+  panelTheme: '#F5F5F5', // 밝은 패널 기본값
+  mainTheme: '#3B82F6', // 파란색 버튼 기본값
 };
 
-// ⭐ 2-1. 그라데이션 끝 색상 기본값 (시작 색상과 동일하게 설정)
 const defaultGradientColors: GradientColors = {
   bgThemeEnd: '#FFFFFF',
   bubbleThemeEnd: '#000000',
@@ -75,7 +80,6 @@ const defaultFont: FontState = {
   fontSize: '16px',
 };
 
-// ⭐ 2-2. 모드 기본값
 const defaultMode: ModeState = {
   gradientMode: false,
 };
@@ -84,42 +88,68 @@ const defaultBackground = {
   bgAttachmentPath: '',
 };
 
-// ------------------------------------------
-// 3. 스토어 생성 및 Persist 적용
-// ------------------------------------------
+// ⭐ 3-1. 대비 모드 기본값 (초기 배경색을 기반으로 계산)
+const defaultContrast: ContrastState = {
+  bgTextMode: getContrastMode(defaultColors.bgTheme),
+  bubbleTextMode: getContrastMode(defaultColors.bubbleTheme),
+  panelTextMode: getContrastMode(defaultColors.panelTheme),
+  mainTextMode: getContrastMode(defaultColors.mainTheme),
+};
+
+// ==========================================
+// 4. 스토어 생성 및 Persist 적용
+// ==========================================
 
 export const useColorStore = create(
   persist<SettingState>(
-    (set) => ({
+    (set, get) => ({
       // 기본 상태 통합
       ...defaultColors,
       ...defaultFont,
-      ...defaultGradientColors, // ⭐ 그라데이션 색상 추가
-      ...defaultMode, // ⭐ 모드 상태 추가 // [색상] 단일 색상 업데이트 함수 (시작 색상)
+      ...defaultGradientColors,
+      ...defaultMode,
       ...defaultBackground,
+      ...defaultContrast, // ⭐ 대비 모드 상태 통합
 
+      // [색상] 단일 색상 업데이트 함수 (대비 자동 계산 로직 포함)
       setSingleColor: (key, color) => {
-        set({ [key]: color } as unknown as Partial<SettingState>);
-      }, // ⭐ [색상] 단일 그라데이션 끝 색상 업데이트 함수
+        // 1. 새 배경색의 대비 모드를 계산
+        const newContrastMode = getContrastMode(color);
 
+        // 2. 배경 키에 대응하는 텍스트 모드 키 매핑
+        const textKeyMap: { [K in keyof ThemeColors]: keyof ContrastState } = {
+          bgTheme: 'bgTextMode',
+          bubbleTheme: 'bubbleTextMode',
+          panelTheme: 'panelTextMode',
+          mainTheme: 'mainTextMode',
+        };
+        const contrastKey = textKeyMap[key];
+
+        // 3. 배경색과 계산된 대비 모드를 한 번에 업데이트
+        set({
+          [key]: color,
+          [contrastKey]: newContrastMode,
+        } as unknown as Partial<SettingState>);
+      },
+
+      // [그라데이션] 끝 색상 업데이트 함수 (대비 계산은 시작 색상을 기준으로 하므로 로직 불필요)
       setSingleGradientColor: (key, color) => {
         set({ [key]: color } as unknown as Partial<SettingState>);
-      }, // [글꼴] 글꼴 스타일(클래스 또는 크기) 업데이트 함수
+      },
 
+      // [글꼴] 글꼴 스타일(클래스 또는 크기) 업데이트 함수
       setFontStyle: (key, value) => {
         set({ [key]: value } as unknown as Partial<SettingState>);
-      }, // ⭐ [모드] 그라데이션 모드 토글 함수
+      },
 
+      // [모드] 그라데이션 모드 토글 함수
       setGradientMode: (mode) => {
         set({ gradientMode: mode });
       },
 
+      // [배경] 배경 이미지 경로 설정 함수
       setbgAttachmentPath: (path: string) => {
         set({ bgAttachmentPath: path } as unknown as Partial<SettingState>);
-      },
-
-      setOpacityLevel: (opacity: string) => {
-        set({ opacityLevel: opacity } as unknown as Partial<SettingState>);
       },
     }),
     {

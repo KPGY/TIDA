@@ -18,6 +18,7 @@ import {
   Search,
   FileText,
   Image,
+  Home,
 } from 'lucide-react';
 import Link from 'next/link';
 import AutoUpdateStatus from '../components/AutoUpdateStatus';
@@ -169,8 +170,7 @@ const HomePage: NextPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentViewPath, setCurrentViewPath] = useState<string | null>(null);
 
-  const { gradientMode, bgAttachmentPath, opacityLevel, setOpacityLevel } =
-    useColorStore();
+  const { gradientMode, bgAttachmentPath } = useColorStore();
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -234,10 +234,6 @@ const HomePage: NextPage = () => {
     setIsModalOpen(true);
   };
 
-  const handleOpacityChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const newOpacity = event.target.value;
-    setOpacityLevel(newOpacity);
-  };
   useEffect(() => {
     inputRef.current?.focus();
 
@@ -354,24 +350,15 @@ const HomePage: NextPage = () => {
             : 'bg-panelTheme'
         } top-0 left-0 right-0 z-10 app-drag`}
       >
-        <p className='text-gray-900 text-dynamic font-baseFont'>
+        <p className='text-textPanelTheme text-dynamic font-baseFont'>
           {formattedHeaderDate}
         </p>
-        <input
-          type='range'
-          min={10}
-          max={100}
-          step={5}
-          value={opacityLevel}
-          onChange={handleOpacityChange}
-          className='w-20 h-1 cursor-pointer accent-mainTheme app-no-drag'
-        />
         <div className='flex gap-4 app-no-drag items-center'>
           <button
             className='text-mainTheme font-baseFont text-dynamic font-bold'
             onClick={handleTodayClick}
           >
-            Today
+            <Home size={20} className='text-mainTheme cursor-pointer' />
           </button>
           <Search size={20} className='text-mainTheme cursor-pointer' />
           <Calendar size={20} className='text-mainTheme cursor-pointer' />
@@ -405,9 +392,9 @@ const HomePage: NextPage = () => {
                 ${
                   isSelected
                     ? gradientMode
-                      ? 'bg-gradient-to-r from-mainTheme to-mainThemeEnd text-white rounded-full font-bold shadow-md'
-                      : 'bg-mainTheme text-white rounded-full font-bold shadow-md'
-                    : 'text-gray-950 hover:bg-gray-100'
+                      ? 'bg-gradient-to-r from-mainTheme to-mainThemeEnd text-textMainTheme rounded-full font-bold shadow-md'
+                      : 'bg-mainTheme text-textMainTheme rounded-full font-bold shadow-md'
+                    : 'text-textPanelTheme hover:bg-gray-100'
                 }`}
               onClick={() => handleDateChange(date)}
             >
@@ -426,7 +413,7 @@ const HomePage: NextPage = () => {
             key={item.id}
             className='flex items-end mb-2 group flex-shrink-0 w-full'
           >
-            <span className='text-sm text-gray-400 mr-2 mb-1 flex-shrink-0'>
+            <span className='text-sm text-textBgTheme mr-2 mb-1 flex-shrink-0'>
               {item.time}
             </span>
             <div
@@ -434,7 +421,7 @@ const HomePage: NextPage = () => {
                 gradientMode
                   ? 'bg-gradient-to-r from-bubbleTheme to-bubbleThemeEnd'
                   : 'bg-bubbleTheme'
-              } text-white text-dynamic font-baseFont p-2 rounded-xl overflow-hidden break-words max-w-[70%] whitespace-pre-wrap`}
+              } text-textBubbleTheme text-dynamic font-baseFont p-2 rounded-xl overflow-hidden break-words max-w-[70%] whitespace-pre-wrap`}
             >
               {item.content}
 
