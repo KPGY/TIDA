@@ -1,5 +1,3 @@
-// pages/HomePage.tsx
-
 'use client';
 import React, {
   useState,
@@ -21,6 +19,11 @@ import {
   Home,
 } from 'lucide-react';
 import Link from 'next/link';
+// ✨ DatePicker 및 스타일 import
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { ko } from 'date-fns/locale';
+
 import AutoUpdateStatus from '../components/AutoUpdateStatus';
 import { useColorStore } from '../components/store';
 import { IPC_CHANNEL } from '../../main/ipc/channels';
@@ -166,6 +169,8 @@ const HomePage: NextPage = () => {
   const [currentAttachments, setCurrentAttachments] = useState<Attachment[]>(
     []
   );
+  // ✨ 캘린더 모달 상태 추가
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentViewPath, setCurrentViewPath] = useState<string | null>(null);
@@ -291,8 +296,21 @@ const HomePage: NextPage = () => {
     loadDiary(currentDate);
   }, [currentDate]);
 
+  // ✨ handleDateChange 수정: 날짜 재클릭 시 캘린더 모달 토글
   const handleDateChange = (newDate: Date) => {
-    setCurrentDate(new Date(newDate));
+    const isSameDay =
+      currentDate &&
+      !isNaN(currentDate.getTime()) &&
+      newDate.toDateString() === currentDate.toDateString();
+
+    if (isSameDay) {
+      // 1. 현재 선택된 날짜를 다시 클릭했을 경우: 캘린더 열림 상태를 토글
+      setIsCalendarOpen((prev) => !prev);
+    } else {
+      // 2. 다른 날짜를 선택했을 경우: 날짜 변경 및 캘린더 닫기
+      setCurrentDate(new Date(newDate));
+      setIsCalendarOpen(false); // 날짜를 바꾸면 캘린더는 닫아줍니다.
+    }
   };
 
   const handleChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -301,6 +319,7 @@ const HomePage: NextPage = () => {
 
   const handleTodayClick = () => {
     setCurrentDate(new Date());
+    setIsCalendarOpen(false);
   };
 
   const handleSend = async () => {
@@ -361,6 +380,8 @@ const HomePage: NextPage = () => {
             <Home size={20} className='text-mainTheme cursor-pointer' />
           </button>
           <Search size={20} className='text-mainTheme cursor-pointer' />
+
+          {/* ✨ 캘린더 아이콘 클릭 이벤트 추가 */}
           <Calendar size={20} className='text-mainTheme cursor-pointer' />
           <Link href='/setting'>
             <Settings size={20} className='text-mainTheme cursor-pointer' />
@@ -545,6 +566,27 @@ const HomePage: NextPage = () => {
           />
         </div>
       </footer>
+
+      {/* ✨ Calendar 모달 렌더링 부분 */}
+      {isCalendarOpen && (
+        <div
+          className='absolute top-36 left-0 right-0 z-20 flex justify-center app-no-drag'
+          onClick={() => setIsCalendarOpen(false)}
+        >
+          <DatePicker
+            selected={currentDate}
+            onChange={(date: Date) => {
+              // 달력에서 날짜를 선택하면 상태를 변경하고 모달을 닫습니다.
+              setCurrentDate(date);
+              setIsCalendarOpen(false);
+            }}
+            // DatePicker를 Calendar처럼 보이게 합니다.
+            inline
+            locale={ko}
+          />
+        </div>
+      )}
+
       {isModalOpen && currentViewPath && (
         <ImageViewerModal
           filePath={currentViewPath}

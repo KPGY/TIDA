@@ -11,8 +11,7 @@ import { initializeAutoUpdater } from './updater/autoUpdater';
 import { startWatchingDate, stopWatchingDate } from './utils/dataWatcher';
 
 // ****************************************************
-// 수정된 부분: 파일 업로드 IPC를 담당하는 새로운 함수를 import 합니다.
-// (backgroundIpc 대신 fileUploader.ts를 사용한다고 가정)
+// 파일 업로드 IPC를 담당하는 새로운 함수를 import 합니다.
 import { initializeFileUploaderIPC } from './ipc/fileUpload';
 // ****************************************************
 
@@ -32,13 +31,14 @@ initializeDatabaseAndIPC();
 // ----------------------------------------------------
 
 // ****************************************************
-// 수정된 부분: 파일 업로드 관련 IPC 핸들러 (UPLOAD_BACKGROUND, UPLOAD_ATTACHMENT)를 한 번만 초기화합니다.
+// 파일 업로드 관련 IPC 핸들러 (UPLOAD_BACKGROUND, UPLOAD_ATTACHMENT)를 한 번만 초기화합니다.
 initializeFileUploaderIPC();
 // ****************************************************
 
 (async () => {
-  await app.whenReady(); // 메뉴 표시줄 제거
+  await app.whenReady();
 
+  // 메뉴 표시줄 제거
   if (process.platform === 'win32' || process.platform === 'linux') {
     Menu.setApplicationMenu(null);
   }
@@ -47,10 +47,21 @@ initializeFileUploaderIPC();
     width: 450,
     height: 900,
     frame: false,
+    // 초기에는 alwaysOnTop을 true로 설정 (사용자가 명시적으로 켜길 원한다고 가정)
     alwaysOnTop: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
+  });
+
+  // ****************************************************
+  // ⭐️ 핵심 수정 로직: focus/blur 이벤트 리스너 추가
+  // 포커스를 얻으면: setAlwaysOnTop(true)
+  mainWindow.on('focus', () => {
+    // 포커스를 얻으면 항상 위에 있도록 유지합니다.
+    mainWindow.setAlwaysOnTop(true);
+    log.info('Window Focus: alwaysOnTop set to true');
+    // 렌더러 프로세스에 상태 변화를 알릴 수도 있습니다. (예: mainWindow.webContents.send('window-focused', true))
   });
 
   if (isProd) {
@@ -62,10 +73,12 @@ initializeFileUploaderIPC();
     const port = process.argv[2];
     await mainWindow.loadURL(`http://localhost:${port}/home`);
     mainWindow.webContents.openDevTools();
-  } // 윈도우 생성 직후에 바로 날짜 감시 시작
+  }
 
-  startWatchingDate(mainWindow); // 윈도우가 닫히면 타이머를 정리합니다.
+  // 윈도우 생성 직후에 바로 날짜 감시 시작
+  startWatchingDate(mainWindow);
 
+  // 윈도우가 닫히면 타이머를 정리합니다.
   mainWindow.on('closed', () => {
     stopWatchingDate();
   });

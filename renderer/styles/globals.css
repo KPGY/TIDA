@@ -17,3 +17,41 @@
 html::-webkit-scrollbar {
   display: none;
 }
+
+/* 글로벌 CSS 파일 (globals.css) */
+
+/* 1. 현재 월/연도 텍스트를 강제 적용 */
+.react-datepicker__current-month {
+  @apply !text-textPanelTheme !important;
+}
+
+/* 2. 요일 이름 (SUN, MON, ...) 텍스트를 강제 적용 */
+.react-datepicker__day-name {
+  @apply !text-textPanelTheme !important;
+}
+
+/* (기존 헤더 배경색 코드) */
+.react-datepicker__header {
+  @apply !bg-panelTheme !important; /* 배경색만 여기서 담당 */
+}
+
+.react-datepicker {
+  @apply bg-attachment;
+}
+
+/* 2. 날짜 셀 텍스트 (날짜 숫자) */
+.react-datepicker__day,
+.react-datepicker__day-name {
+  @apply !text-textBgTheme !important;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  /* 선택된 날짜의 배경색 변경 */
+  @apply bg-mainTheme text-textMainTheme rounded-lg !important;
+}
+
+.react-datepicker__day:hover {
+  /* 날짜에 마우스를 올렸을 때 */
+  @apply bg-gray-200;
+}
