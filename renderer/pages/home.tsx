@@ -592,7 +592,7 @@ const HomePage: NextPage = () => {
       {/* 12. AttachmentModal 렌더링 */}
       {isAttachmentModalOpen && (
         <AttachmentModal
-          initialAttachments={attachmentsToSend} // 이미 첨부된 파일 전달
+          initialFiles={attachmentsToSend} // 이미 첨부된 파일 전달
           onClose={() => setIsAttachmentModalOpen(false)}
           onSave={handleAttachmentsSelected}
         />

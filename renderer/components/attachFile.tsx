@@ -18,7 +18,6 @@ export interface Attachment {
 
 interface AttachmentModalProps {
   initialFiles: Attachment[];
-  initialStickers: Attachment[];
   onClose: () => void;
   // 변경된 파일과 스티커를 모두 반환하지만, 실제로는 수정한 쪽만 변경됩니다.
   onSave: (files: Attachment[], stickers: Attachment[]) => void;
@@ -36,7 +35,7 @@ type Mode = 'SELECT' | 'FILE' | 'STICKER';
 
 const AttachmentModal: React.FC<AttachmentModalProps> = ({
   initialFiles = [],
-  initialStickers = [],
+
   onClose,
   onSave,
 }) => {
@@ -46,13 +45,11 @@ const AttachmentModal: React.FC<AttachmentModalProps> = ({
   // 2. 데이터 상태 관리
   const [selectedFiles, setSelectedFiles] =
     useState<Attachment[]>(initialFiles);
-  const [selectedStickers, setSelectedStickers] =
-    useState<Attachment[]>(initialStickers);
   const [isUploading, setIsUploading] = useState(false);
 
   // 현재 모드에 따라 보여줄 데이터와 핸들러를 동적으로 결정
   const isFileMode = mode === 'FILE';
-  const currentList = isFileMode ? selectedFiles : selectedStickers;
+  const currentList = isFileMode ? selectedFiles : [];
   const currentTitle = isFileMode ? '일반 파일 관리' : '스티커/배경 관리';
 
   // 3. 통합 업로드 핸들러
@@ -70,8 +67,6 @@ const AttachmentModal: React.FC<AttachmentModalProps> = ({
     if (result.success && result.files && Array.isArray(result.files)) {
       if (isFileMode) {
         setSelectedFiles((prev) => [...prev, ...result.files]);
-      } else {
-        setSelectedStickers((prev) => [...prev, ...result.files]);
       }
     }
     setIsUploading(false);
@@ -81,15 +76,13 @@ const AttachmentModal: React.FC<AttachmentModalProps> = ({
   const handleRemove = (indexToRemove: number) => {
     if (isFileMode) {
       setSelectedFiles((prev) => prev.filter((_, i) => i !== indexToRemove));
-    } else {
-      setSelectedStickers((prev) => prev.filter((_, i) => i !== indexToRemove));
     }
   };
 
   // 5. 저장 핸들러
   const handleSave = () => {
     // 변경된 내용은 반영하고, 건드리지 않은 쪽은 초기값(또는 현재값)을 그대로 유지해서 보냅니다.
-    onSave(selectedFiles, selectedStickers);
+    onSave(selectedFiles, []);
     onClose();
   };
 
@@ -167,7 +160,7 @@ const AttachmentModal: React.FC<AttachmentModalProps> = ({
                   첨부합니다.
                 </p>
                 <span className='mt-4 text-xs font-semibold bg-gray-100 text-gray-600 px-2 py-1 rounded'>
-                  현재 {selectedStickers.length}개
+                  현재 0개
                 </span>
               </button>
             </div>
