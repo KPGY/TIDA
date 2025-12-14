@@ -42,7 +42,7 @@ html::-webkit-scrollbar {
 /* 2. 날짜 셀 텍스트 (날짜 숫자) */
 .react-datepicker__day,
 .react-datepicker__day-name {
-  @apply !text-textBgTheme !important;
+  @apply !text-textBgTheme bg-gray-400/50 !important;
 }
 
 .react-datepicker__day--selected,

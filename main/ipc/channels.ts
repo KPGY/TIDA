@@ -8,6 +8,8 @@ export const IPC_CHANNEL = {
 
   UPLOAD_BACKGROUND: 'upload-background',
 
+  UPLOAD_STICKER: 'upload-sticker',
+
   RESTART_APP: 'restart-app',
   UPDATE_MESSAGE: 'update-message', // Date Watcher
 

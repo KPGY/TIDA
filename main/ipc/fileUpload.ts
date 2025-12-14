@@ -96,4 +96,8 @@ export function initializeFileUploaderIPC() {
     // multiSelections: true, subDirectory: 'chat' 지정
     return handleFileUpload(event, true, 'chat');
   });
+
+  ipcMain.handle(IPC_CHANNEL.UPLOAD_STICKER, (event) => {
+    return handleFileUpload(event, true, 'sticker');
+  });
 }

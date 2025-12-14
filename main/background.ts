@@ -47,7 +47,6 @@ initializeFileUploaderIPC();
     width: 450,
     height: 900,
     frame: false,
-    // 초기에는 alwaysOnTop을 true로 설정 (사용자가 명시적으로 켜길 원한다고 가정)
     alwaysOnTop: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),

@@ -1,3 +1,4 @@
+// src/pages/HomePage.tsx
 'use client';
 import React, {
   useState,
@@ -6,16 +7,16 @@ import React, {
   useRef,
   type ChangeEvent,
 } from 'react';
+import Image from 'next/image';
 import { NextPage } from 'next';
 import {
-  Calendar,
+  ListTodo,
   Settings,
   Plus,
   Send,
   X,
   Search,
   FileText,
-  Image,
   Home,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -28,6 +29,8 @@ import AutoUpdateStatus from '../components/AutoUpdateStatus';
 import { useColorStore } from '../components/store';
 import { IPC_CHANNEL } from '../../main/ipc/channels';
 import ImageViewerModal from '../components/ImageModal';
+// ✨ AttachmentModal import 추가
+import AttachmentModal from '../components/attachFile';
 
 // ✨ 개별 첨부 파일 객체의 타입
 interface Attachment {
@@ -166,12 +169,17 @@ const HomePage: NextPage = () => {
   const [inputValue, setInputValue] = useState('');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [diaryList, setDiaryList] = useState<DiaryItem[]>([]);
-  const [currentAttachments, setCurrentAttachments] = useState<Attachment[]>(
-    []
-  );
-  // ✨ 캘린더 모달 상태 추가
+
+  // 1. ✨ 최종 전송 대기 파일 목록
+  const [attachmentsToSend, setAttachmentsToSend] = useState<Attachment[]>([]);
+
+  // 2. Attachment Modal 상태 유지
+  const [isAttachmentModalOpen, setIsAttachmentModalOpen] = useState(false);
+
+  // ✨ 캘린더 모달 상태 유지 (기존 상태 유지)
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+
+  // 이미지 뷰어 모달 상태 유지
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentViewPath, setCurrentViewPath] = useState<string | null>(null);
 
@@ -209,42 +217,34 @@ const HomePage: NextPage = () => {
     loadDiary(currentDate);
   };
 
-  const handleFileUpload = async () => {
-    if (!window.ipc) return;
-    setIsUploading(true);
-
-    const result = await window.ipc.invoke(IPC_CHANNEL.UPLOAD_ATTACHMENT);
-
-    if (result.success && result.files && Array.isArray(result.files)) {
-      setCurrentAttachments(result.files);
-    } else if (result.error !== 'User cancelled file selection') {
-      console.error(`파일 업로드 실패: ${result.error}`);
-    }
-
-    setIsUploading(false);
+  const handleOpenFile = (filePath: string) => {
+    setCurrentViewPath(filePath);
+    setIsModalOpen(true);
   };
 
+  // 3. ✨ 모달에서 파일을 선택하고 돌아왔을 때 처리
+  // NOTE: AttachmentModal의 onSave Prop 시그니처가 (files, stickers)를 받는 경우를 대비해, files만 사용
+  const handleAttachmentsSelected = (
+    files: Attachment[],
+    stickers?: Attachment[]
+  ) => {
+    setAttachmentsToSend(files); // 최종 파일 목록을 상태에 저장
+    setIsAttachmentModalOpen(false); // 모달 닫기
+  };
+
+  // 4. ✨ 미리보기 항목에서 파일을 삭제하는 핸들러 추가
   const handleRemoveAttachment = (indexToRemove: number) => {
-    setCurrentAttachments((prev) =>
+    setAttachmentsToSend((prev) =>
       prev.filter((_, index) => index !== indexToRemove)
     );
-  };
-
-  const handleOpenFile = (filePath: string) => {
-    // TODO: 메인 프로세스에 파일 열기 명령을 IPC로 보냄 (예: shell.openPath)
-
-    // await window.ipc.invoke('open-file', filePath);
-    setCurrentViewPath(filePath);
-    // 2. 모달 열기 플래그를 true로 설정
-    setIsModalOpen(true);
   };
 
   useEffect(() => {
     inputRef.current?.focus();
 
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Enter') {
-        const activeTag = document.activeElement.tagName;
+        const activeTag = (document.activeElement as HTMLElement)?.tagName;
         if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
           e.preventDefault();
           inputRef.current?.focus();
@@ -323,7 +323,8 @@ const HomePage: NextPage = () => {
   };
 
   const handleSend = async () => {
-    if (!inputValue.trim() && currentAttachments.length === 0) return;
+    // 5. 전송 조건
+    if (!inputValue.trim() && attachmentsToSend.length === 0) return;
 
     const submissionTime = new Date();
     const entryDate = new Date(currentDate);
@@ -336,22 +337,20 @@ const HomePage: NextPage = () => {
       date: entryDate.toLocaleDateString('en-CA'),
       time: entryDate.toTimeString().slice(0, 5),
 
+      // 6. attachmentsToSend 사용
       attachmentsJson:
-        currentAttachments.length > 0
-          ? JSON.stringify(currentAttachments)
-          : null,
+        attachmentsToSend.length > 0 ? JSON.stringify(attachmentsToSend) : null,
     };
 
     await window.ipc.invoke(IPC_CHANNEL.SAVE_DIARY, diary);
 
     setInputValue('');
-    setCurrentAttachments([]);
+    setAttachmentsToSend([]); // 7. 전송 후 최종 파일 목록 초기화
 
     loadDiary(currentDate);
   };
 
   return (
-    // HomePage.tsx의 최신 로직 (올바름)
     <div
       className={`w-full min-h-screen flex flex-col ${
         bgAttachmentPath
@@ -381,8 +380,7 @@ const HomePage: NextPage = () => {
           </button>
           <Search size={20} className='text-mainTheme cursor-pointer' />
 
-          {/* ✨ 캘린더 아이콘 클릭 이벤트 추가 */}
-          <Calendar size={20} className='text-mainTheme cursor-pointer' />
+          <ListTodo size={20} className='text-mainTheme cursor-pointer' />
           <Link href='/setting'>
             <Settings size={20} className='text-mainTheme cursor-pointer' />
           </Link>
@@ -434,7 +432,7 @@ const HomePage: NextPage = () => {
             key={item.id}
             className='flex items-end mb-2 group flex-shrink-0 w-full'
           >
-            <span className='text-sm text-textBgTheme mr-2 mb-1 flex-shrink-0'>
+            <span className='text-sm text-textBgTheme mr-2 mb-1 flex-shrink-0 rounded-full pl-2 pr-2 bg-gray-400'>
               {item.time}
             </span>
             <div
@@ -471,60 +469,55 @@ const HomePage: NextPage = () => {
             : 'bg-panelTheme'
         } flex flex-col gap-2 z-10`}
       >
-        {/* ✨ 현재 선택된 첨부파일 미리보기 (푸터용 스타일) */}
-        {currentAttachments.length > 0 && (
-          <div className='flex flex-col gap-2 p-2 bg-gray-100/70 rounded-lg max-w-full'>
-            <div className='flex items-center gap-2'>
-              <Image size={16} className='text-gray-700' />
-              <span className='text-gray-700 text-sm font-semibold'>
-                첨부 파일 ({currentAttachments.length}개)
-              </span>
-            </div>
+        {/* 8. ✨ 첨부 파일 미리보기 목록 및 삭제 버튼 구현 */}
+        {attachmentsToSend.length > 0 && (
+          <div className='flex gap-2 p-2 bg-gray-100/70 rounded-lg overflow-x-auto whitespace-nowrap'>
+            {attachmentsToSend.map((att, index) => (
+              <div
+                key={att.filePath + index}
+                className='relative flex items-center bg-white border border-gray-300 rounded-lg p-2 text-sm text-gray-700 max-w-xs flex-shrink-0'
+              >
+                {isImageFile(att.fileName) ? (
+                  // 이미지 파일인 경우: 실제 이미지를 썸네일로 표시
+                  <Image
+                    src={`attachment-asset://${encodeURIComponent(
+                      att.filePath
+                    )}`}
+                    alt={att.fileName}
+                    width={48}
+                    height={48}
+                    className='object-cover rounded flex-shrink-0' // 크기를 작게 지정
+                    // 로드 실패 시 대체 아이콘 표시
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      // 실패 시 FileText 아이콘으로 대체할 요소를 추가할 수 있습니다.
+                    }}
+                  />
+                ) : (
+                  // 기타 파일인 경우 파일 아이콘
+                  <FileText size={16} className='text-gray-500 mr-2' />
+                )}
 
-            <div className='flex flex-wrap gap-2'>
-              {currentAttachments.map((att, index) => (
-                <div
-                  key={index}
-                  className='relative flex items-center bg-white border border-gray-300 rounded-lg p-1 pr-3 text-sm text-gray-800 hover:shadow-md transition'
+                {/* 9. ✨ 삭제 버튼 */}
+                <button
+                  onClick={() => handleRemoveAttachment(index)}
+                  className='ml-2 text-gray-400 hover:text-red-500 transition'
+                  title='첨부 취소'
                 >
-                  {/* 이미지 썸네일 표시 */}
-                  {isImageFile(att.fileName) ? (
-                    <div className='w-12 h-12 flex-shrink-0 overflow-hidden rounded-md mr-2'>
-                      {/* ✨ 커스텀 프로토콜과 URL 인코딩 사용 */}
-                      <img
-                        src={`attachment-asset://${encodeURIComponent(
-                          att.filePath
-                        )}`}
-                        alt={att.fileName}
-                        className='w-full h-full object-cover'
-                      />
-                    </div>
-                  ) : (
-                    <div className='w-12 h-12 flex-shrink-0 flex items-center justify-center bg-gray-100 rounded-md mr-2'>
-                      <FileText size={20} className='text-gray-500' />
-                    </div>
-                  )}
-
-                  <button
-                    onClick={() => handleRemoveAttachment(index)}
-                    className='ml-2 text-red-500 hover:text-red-700 transition'
-                    title='첨부 취소'
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              ))}
-            </div>
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
           </div>
         )}
 
         <div className='flex items-center gap-4 w-full'>
-          <button onClick={handleFileUpload} disabled={isUploading}>
+          {/* 10. Plus 버튼 */}
+          <button onClick={() => setIsAttachmentModalOpen(true)}>
             <Plus
               size={24}
-              className={`flex-shrink-0 cursor-pointer ${
-                isUploading ? 'text-gray-400 animate-pulse' : 'text-mainTheme'
-              }`}
+              className='flex-shrink-0 cursor-pointer text-mainTheme'
             />
           </button>
 
@@ -551,15 +544,16 @@ const HomePage: NextPage = () => {
           />
           <Send
             size={24}
+            // 11. 전송 조건
             className={`flex-shrink-0 cursor-pointer ${
-              !inputValue.trim() && currentAttachments.length === 0
+              !inputValue.trim() && attachmentsToSend.length === 0
                 ? 'text-gray-400'
                 : 'text-mainTheme'
             }`}
             onClick={handleSend}
             style={{
               pointerEvents:
-                !inputValue.trim() && currentAttachments.length === 0
+                !inputValue.trim() && attachmentsToSend.length === 0
                   ? 'none'
                   : 'auto',
             }}
@@ -567,23 +561,24 @@ const HomePage: NextPage = () => {
         </div>
       </footer>
 
-      {/* ✨ Calendar 모달 렌더링 부분 */}
+      {/* ✨ Calendar 모달 렌더링 부분 (isCalendarOpen 상태 사용) */}
       {isCalendarOpen && (
         <div
-          className='absolute top-36 left-0 right-0 z-20 flex justify-center app-no-drag'
+          className='absolute top-28 left-0 right-0 bottom-0 z-20 flex justify-center p-4 app-no-drag'
           onClick={() => setIsCalendarOpen(false)}
         >
-          <DatePicker
-            selected={currentDate}
-            onChange={(date: Date) => {
-              // 달력에서 날짜를 선택하면 상태를 변경하고 모달을 닫습니다.
-              setCurrentDate(date);
-              setIsCalendarOpen(false);
-            }}
-            // DatePicker를 Calendar처럼 보이게 합니다.
-            inline
-            locale={ko}
-          />
+          <div onClick={(e) => e.stopPropagation()}>
+            <DatePicker
+              selected={currentDate}
+              onChange={(date: Date) => {
+                setCurrentDate(date);
+                setIsCalendarOpen(false);
+              }}
+              inline
+              locale={ko}
+              onCalendarOpen={() => inputRef.current?.blur()}
+            />
+          </div>
         </div>
       )}
 
@@ -591,6 +586,15 @@ const HomePage: NextPage = () => {
         <ImageViewerModal
           filePath={currentViewPath}
           onClose={() => setIsModalOpen(false)}
+        />
+      )}
+
+      {/* 12. AttachmentModal 렌더링 */}
+      {isAttachmentModalOpen && (
+        <AttachmentModal
+          initialAttachments={attachmentsToSend} // 이미 첨부된 파일 전달
+          onClose={() => setIsAttachmentModalOpen(false)}
+          onSave={handleAttachmentsSelected}
         />
       )}
     </div>
