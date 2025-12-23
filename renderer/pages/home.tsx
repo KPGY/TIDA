@@ -380,7 +380,10 @@ const HomePage: NextPage = () => {
           </button>
           <Search size={20} className='text-mainTheme cursor-pointer' />
 
-          <ListTodo size={20} className='text-mainTheme cursor-pointer' />
+          <Link href='/todoList'>
+            <ListTodo size={20} className='text-mainTheme cursor-pointer' />
+          </Link>
+
           <Link href='/setting'>
             <Settings size={20} className='text-mainTheme cursor-pointer' />
           </Link>
