@@ -10,9 +10,11 @@ import {
   ChevronUp,
   Check,
   Cat,
+  BrushCleaning,
   Trash2,
   X,
   Minus,
+  Trash,
 } from 'lucide-react';
 import { useColorStore } from '../components/store';
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -162,7 +164,7 @@ const TodoList = () => {
         </div>
       </header>
 
-      <main className='flex flex-col pt-20 pb-24 px-4 relative'>
+      <main className='flex flex-col pt-16 pb-24 px-4 relative'>
         {/* --- 인라인 입력 폼 --- */}
         <div className='flex justify-end mb-4'>
           <button
@@ -171,15 +173,15 @@ const TodoList = () => {
               // 로직에 맞춰 수정이 필요할 수 있습니다.
               removeCompleteTodo();
             }}
-            className='p-2 text-red-500 bg-red-100 text-sm flex items-center gap-2 font-bold rounded-lg transition-colors'
+            className='p-1 text-red-500 bg-red-100 flex items-center gap-2 font-bold rounded-lg transition-colors'
           >
-            <Trash2 size={16} /> 완료된 항목 삭제
+            <BrushCleaning size={16} />
           </button>
         </div>
         {isAdding && (
-          <div className='flex flex-col mb-6 animate-in fade-in slide-in-from-top-4 duration-300'>
+          <div className='flex flex-col mb-4 animate-in fade-in slide-in-from-top-4 duration-300'>
             <div className='flex items-center justify-between rounded-full bg-white shadow-lg p-1 border-2 border-mainTheme'>
-              <div className='p-2'>
+              <div className='p-1'>
                 <Circle className='text-gray-300' size={32} />
               </div>
               <input
@@ -187,13 +189,13 @@ const TodoList = () => {
                 value={newTodoContent}
                 onChange={(e) => setNewTodoContent(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-                placeholder='할 일을 입력하세요...'
-                className='flex-grow bg-transparent outline-none font-bold text-black min-w-0 break-words'
+                placeholder='할 일을 입력하세요'
+                className='flex-grow bg-transparent outline-none text-sm font-bold text-black min-w-0 break-words'
               />
-              <div className='flex gap-1 pr-2'>
+              <div className='flex gap-1'>
                 <button
                   onClick={handleSave}
-                  className='p-2 bg-mainTheme rounded-full text-white hover:scale-105 transition-transform'
+                  className='p-2 bg-mainTheme rounded-full items-center text-white hover:scale-105 transition-transform'
                 >
                   <Check size={20} />
                 </button>
@@ -248,12 +250,12 @@ const TodoList = () => {
           ? todos.map((todo) => (
               <div
                 key={todo.id}
-                className='flex flex-col mb-4'
+                className='flex flex-col mb-2'
                 onContextMenu={(e) => handleContextMenu(e, todo.id)}
               >
                 <div className='flex items-center justify-between rounded-full bg-white shadow-md hover:shadow-lg transition-shadow'>
                   <button
-                    className={`relative flex items-center justify-center h-14 w-14 flex-shrink-0 ${
+                    className={`relative flex items-center justify-center h-12 w-12 flex-shrink-0 ${
                       todo.subTodos.length > 0
                         ? 'cursor-default'
                         : 'cursor-pointer'
@@ -262,7 +264,7 @@ const TodoList = () => {
                     disabled={todo.subTodos.length > 0}
                   >
                     <ProgressCircle
-                      size={48}
+                      size={36}
                       percentage={
                         todo.subTodos.length > 0
                           ? (todo.subTodos.filter((sub) => sub.completed)
@@ -329,7 +331,7 @@ const TodoList = () => {
                 </div>
 
                 {openSubTodoId === todo.id && todo.subTodos && (
-                  <div className='pl-10 mt-2 flex flex-col gap-2'>
+                  <div className='pl-4 mt-2 flex flex-col gap-2'>
                     {todo.subTodos.map((sub) => (
                       <div
                         key={sub.id}
@@ -381,7 +383,7 @@ const TodoList = () => {
             onClick={() => {
               if (selectedTodoId) removeTodo(selectedTodoId);
             }}
-            className='w-full text-left px-4 py-2 text-red-500 hover:bg-red-50 text-sm flex items-center gap-2 font-bold'
+            className='w-full px-4 text-red-500 hover:bg-red-50 text-sm flex items-center gap-2 font-bold'
           >
             <Trash2 size={16} /> 삭제하기
           </button>
@@ -395,7 +397,7 @@ const TodoList = () => {
           style={{ color: mainTextMode === 'dark' ? '#000' : '#fff' }}
           onClick={handleStartAdd}
         >
-          <Plus size={32} />
+          <Plus size={20} />
         </button>
       )}
     </div>
