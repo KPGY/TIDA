@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 import { useColorStore } from '../components/store';
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { todo } from 'node:test';
 
 const TodoList = () => {
   const {
@@ -154,7 +153,7 @@ const TodoList = () => {
             <Home size={20} className='text-mainTheme' />
           </Link>
           <Search size={20} className='text-mainTheme' />
-          <Link href='/todoList'>
+          <Link href='./home'>
             <ListTodo size={20} className='text-mainTheme' />
           </Link>
           <Link href='/setting'>
@@ -180,7 +179,7 @@ const TodoList = () => {
         {isAdding && (
           <div className='flex flex-col mb-6 animate-in fade-in slide-in-from-top-4 duration-300'>
             <div className='flex items-center justify-between rounded-full bg-white shadow-lg p-1 border-2 border-mainTheme'>
-              <div className='p-3'>
+              <div className='p-2'>
                 <Circle className='text-gray-300' size={32} />
               </div>
               <input
@@ -189,7 +188,7 @@ const TodoList = () => {
                 onChange={(e) => setNewTodoContent(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSave()}
                 placeholder='할 일을 입력하세요...'
-                className='flex-grow bg-transparent outline-none font-bold text-black'
+                className='flex-grow bg-transparent outline-none font-bold text-black min-w-0 break-words'
               />
               <div className='flex gap-1 pr-2'>
                 <button
@@ -254,7 +253,7 @@ const TodoList = () => {
               >
                 <div className='flex items-center justify-between rounded-full bg-white shadow-md hover:shadow-lg transition-shadow'>
                   <button
-                    className={`relative flex items-center justify-center h-14 w-14 ${
+                    className={`relative flex items-center justify-center h-14 w-14 flex-shrink-0 ${
                       todo.subTodos.length > 0
                         ? 'cursor-default'
                         : 'cursor-pointer'
@@ -270,7 +269,9 @@ const TodoList = () => {
                               .length /
                               todo.subTodos.length) *
                             100
-                          : 0
+                          : todo.completed
+                          ? 100
+                          : 0 // 하위 작업 없을 때: 완료면 100%, 아니면 0%
                       }
                     />
                     {todo.completed ? (
@@ -299,13 +300,15 @@ const TodoList = () => {
                     )}
                   </button>
                   <div
-                    className={`flex-grow font-bold ml-2 ${
+                    className={`flex-grow font-bold ml-2 min-w-0 ${
                       todo.completed
                         ? 'line-through text-gray-400'
                         : 'text-black'
                     }`}
                   >
-                    {todo.content}
+                    <p className='break-words leading-tight pr-4'>
+                      {todo.content}
+                    </p>
                   </div>
                   {todo.subTodos && todo.subTodos.length > 0 && (
                     <button
