@@ -14,7 +14,7 @@ import {
   Trash2,
   X,
   Minus,
-  Trash,
+  ListPlus,
 } from 'lucide-react';
 import { useColorStore } from '../components/store';
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -29,19 +29,32 @@ const TodoList = () => {
     addTodo,
     removeCompleteTodo,
     mainTextMode,
+    addSubTodo,
   } = useColorStore();
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  // --- 인라인 입력 관련 상태 ---
+  // --- 메인 투두 입력 관련 상태 ---
   const [isAdding, setIsAdding] = useState(false);
   const [newTodoContent, setNewTodoContent] = useState('');
   const [newSubTodos, setNewSubTodos] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // --- 기존 상태 ---
-  const [openSubTodoId, setOpenSubTodoId] = useState<string | null>(null);
+  // --- 기존 리스트 내 하위 투두(Sub-todo) 입력 관련 상태 ---
+  const [editingSubTodoId, setEditingSubTodoId] = useState<string | null>(null);
+  const [subInputContent, setSubInputContent] = useState('');
+  const subInputRef = useRef<HTMLInputElement>(null);
+
+  // --- UI 상태 (수정됨: 단일 string에서 string 배열로 변경) ---
+  const [openSubTodoIds, setOpenSubTodoIds] = useState<string[]>([]);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [selectedTodoId, setSelectedTodoId] = useState<string | null>(null);
+
+  // 폴더 열고 닫기 핸들러 (개별 독립 작동)
+  const toggleSubFolder = (id: string) => {
+    setOpenSubTodoIds((prev) =>
+      prev.includes(id) ? prev.filter((openId) => openId !== id) : [...prev, id]
+    );
+  };
 
   // 입력 모드 활성화 및 포커스
   const handleStartAdd = () => {
@@ -49,7 +62,7 @@ const TodoList = () => {
     setTimeout(() => inputRef.current?.focus(), 100);
   };
 
-  // 투두 저장 로직
+  // 메인 투두 저장 로직
   const handleSave = () => {
     if (!newTodoContent.trim()) {
       setIsAdding(false);
@@ -70,7 +83,23 @@ const TodoList = () => {
     setNewSubTodos([]);
   };
 
-  // 우클릭 및 기타 로직 (기존 유지)
+  // --- 기존 리스트에 하위 작업 저장 (스토어 연동) ---
+  const handleSaveSubTodo = (parentId: string) => {
+    if (!subInputContent.trim()) {
+      setEditingSubTodoId(null);
+      return;
+    }
+    addSubTodo(parentId, subInputContent);
+    setSubInputContent('');
+    setEditingSubTodoId(null);
+
+    // 저장 후 해당 리스트가 닫혀있다면 열어줌
+    if (!openSubTodoIds.includes(parentId)) {
+      setOpenSubTodoIds((prev) => [...prev, parentId]);
+    }
+  };
+
+  // 우클릭 메뉴 핸들러
   const handleContextMenu = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     setMenuPos({ x: e.clientX, y: e.clientY });
@@ -78,15 +107,12 @@ const TodoList = () => {
   };
 
   const ProgressCircle = ({ percentage, size = 48 }) => {
-    const radius = (size - 4) / 2; // 테두리 두께를 고려한 반지름
-    const circumference = 2 * Math.PI * radius; // 원주 (2 * π * r)
-
-    // 퍼센트에 따른 오프셋 계산 (0일 때 다 비어있고, 100일 때 다 채워짐)
+    const radius = (size - 4) / 2;
+    const circumference = 2 * Math.PI * radius;
     const offset = circumference - (percentage / 100) * circumference;
 
     return (
       <svg width={size} height={size} className='transform -rotate-90'>
-        {/* 배경 원 (연한 테두리) */}
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -96,7 +122,6 @@ const TodoList = () => {
           fill='transparent'
           className='text-gray-200'
         />
-        {/* 진행 상태 원 (애니메이션 테두리) */}
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -165,19 +190,16 @@ const TodoList = () => {
       </header>
 
       <main className='flex flex-col pt-16 pb-24 px-4 relative'>
-        {/* --- 인라인 입력 폼 --- */}
         <div className='flex justify-end mb-4'>
           <button
-            onClick={() => {
-              // 모든 완료된 투두를 지우는 함수라면 인자 없이 호출하거나
-              // 로직에 맞춰 수정이 필요할 수 있습니다.
-              removeCompleteTodo();
-            }}
+            onClick={() => removeCompleteTodo()}
             className='p-1 text-red-500 bg-red-100 flex items-center gap-2 font-bold rounded-lg transition-colors'
           >
             <BrushCleaning size={16} />
           </button>
         </div>
+
+        {/* --- 상단 메인 투두 입력 폼 --- */}
         {isAdding && (
           <div className='flex flex-col mb-4 animate-in fade-in slide-in-from-top-4 duration-300'>
             <div className='flex items-center justify-between rounded-full bg-white shadow-lg p-1 border-2 border-mainTheme'>
@@ -195,36 +217,35 @@ const TodoList = () => {
               <div className='flex gap-1'>
                 <button
                   onClick={handleSave}
-                  className='p-2 bg-mainTheme rounded-full items-center text-white hover:scale-105 transition-transform'
+                  className='p-2 bg-mainTheme rounded-full text-white'
                 >
                   <Check size={20} />
                 </button>
                 <button
                   onClick={handleCancel}
-                  className='p-2 bg-gray-100 rounded-full text-gray-400 hover:bg-gray-200'
+                  className='p-2 bg-gray-100 rounded-full'
                 >
                   <X size={20} className='text-black' />
                 </button>
               </div>
             </div>
 
-            {/* 인라인 서브 투두 추가 영역 */}
-            <div className='mt-2 pl-10 flex flex-col gap-2'>
+            <div className='mt-2 pl-10 pr-4 flex flex-col gap-2'>
               {newSubTodos.map((sub, idx) => (
                 <div
                   key={idx}
-                  className='flex items-center gap-2 bg-white rounded-full px-3 py-1 border border-white'
+                  className='flex items-center bg-white rounded-full px-3 py-1 border-2 border-mainTheme shadow-sm'
                 >
-                  <div className='w-1.5 h-1.5 rounded-full bg-mainTheme' />
+                  <div className='w-1.5 h-1.5 rounded-full bg-mainTheme mr-1' />
                   <input
-                    className='bg-transparent outline-none text-sm flex-grow text-black'
+                    className='outline-none text-sm flex-grow font-bold text-black'
                     value={sub}
                     onChange={(e) => {
                       const next = [...newSubTodos];
                       next[idx] = e.target.value;
                       setNewSubTodos(next);
                     }}
-                    placeholder='하위 작업...'
+                    placeholder='하위 작업'
                   />
                   <button
                     onClick={() =>
@@ -273,31 +294,28 @@ const TodoList = () => {
                             100
                           : todo.completed
                           ? 100
-                          : 0 // 하위 작업 없을 때: 완료면 100%, 아니면 0%
+                          : 0
                       }
                     />
                     {todo.completed ? (
-                      <Check className='absolute text-mainTheme' size={28} />
+                      <Check className='absolute text-mainTheme' size={24} />
                     ) : (
-                      // 1. 완료된 서브 투두 개수 계산
-                      // 2. 완료된 게 하나라도 있을 때만 퍼센트 노출
                       (() => {
                         const completedCount = todo.subTodos.filter(
                           (sub) => sub.completed
                         ).length;
                         const totalCount = todo.subTodos.length;
-
                         if (totalCount > 0 && completedCount > 0) {
                           const percentage = Math.floor(
                             (completedCount / totalCount) * 100
                           );
                           return (
-                            <div className='text-mainTheme absolute text-xs font-bold'>
+                            <div className='text-mainTheme absolute text-[10px] font-bold'>
                               {percentage}%
                             </div>
                           );
                         }
-                        return null; // 완료된 서브가 없으면 아무것도 안 띄움
+                        return null;
                       })()
                     )}
                   </button>
@@ -312,40 +330,83 @@ const TodoList = () => {
                       {todo.content}
                     </p>
                   </div>
-                  {todo.subTodos && todo.subTodos.length > 0 && (
+
+                  {/* 조작 버튼 영역 */}
+                  <div className='flex items-center mr-2'>
                     <button
-                      onClick={() =>
-                        setOpenSubTodoId(
-                          openSubTodoId === todo.id ? null : todo.id
-                        )
-                      }
-                      className='mr-4'
+                      onClick={() => {
+                        setEditingSubTodoId(todo.id);
+                        setTimeout(() => subInputRef.current?.focus(), 50);
+                      }}
+                      className='text-gray-400 p-1 hover:bg-mainTheme/10 rounded-full transition-colors'
                     >
-                      {openSubTodoId === todo.id ? (
-                        <ChevronUp size={20} className='text-gray-500' />
-                      ) : (
-                        <ChevronDown size={20} className='text-gray-500' />
-                      )}
+                      <ListPlus size={20} />
                     </button>
-                  )}
+
+                    {todo.subTodos && todo.subTodos.length > 0 && (
+                      <button
+                        onClick={() => toggleSubFolder(todo.id)}
+                        className='p-1'
+                      >
+                        {openSubTodoIds.includes(todo.id) ? (
+                          <ChevronUp size={20} className='text-gray-500' />
+                        ) : (
+                          <ChevronDown size={20} className='text-gray-500' />
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                {openSubTodoId === todo.id && todo.subTodos && (
-                  <div className='pl-4 mt-2 flex flex-col gap-2'>
+                {/* 하위 작업 입력창 */}
+                {editingSubTodoId === todo.id && (
+                  <div className='pl-10 mt-2 pr-4 animate-in slide-in-from-top-1 duration-200'>
+                    <div className='flex items-center bg-white rounded-full px-3 py-1 border-2 border-mainTheme shadow-sm'>
+                      <div className='w-1.5 h-1.5 rounded-full bg-mainTheme mr-1' />
+                      <input
+                        ref={subInputRef}
+                        className='outline-none text-sm flex-grow font-bold text-black'
+                        value={subInputContent}
+                        onChange={(e) => setSubInputContent(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleSaveSubTodo(todo.id);
+                          if (e.key === 'Escape') setEditingSubTodoId(null);
+                        }}
+                        placeholder='하위 작업'
+                      />
+                      <button
+                        onClick={() => handleSaveSubTodo(todo.id)}
+                        className='text-mainTheme ml-1'
+                      >
+                        <Check size={18} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingSubTodoId(null);
+                          setSubInputContent('');
+                        }}
+                        className='text-gray-400 ml-1'
+                      >
+                        <X size={18} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* 하위 작업 리스트 출력 (여러 개 동시 펼침 가능) */}
+                {openSubTodoIds.includes(todo.id) && todo.subTodos && (
+                  <div className='pl-8 mt-2 flex flex-col gap-2'>
                     {todo.subTodos.map((sub) => (
                       <div
                         key={sub.id}
-                        className='flex items-center rounded-full bg-white p-2 shadow-sm'
+                        className='flex items-center rounded-full bg-white/95 p-2 shadow-sm'
                       >
                         <button onClick={() => toggleTodo(sub.id)}>
                           <Circle
                             className={
-                              todo.subTodos.find((s) => s.id === sub.id)
-                                ?.completed
-                                ? 'text-mainTheme'
-                                : 'text-gray-200'
+                              sub.completed ? 'text-mainTheme' : 'text-gray-200'
                             }
-                            size={20}
+                            size={18}
                           />
                         </button>
                         <p
@@ -366,14 +427,14 @@ const TodoList = () => {
           : !isAdding && (
               <div className='flex flex-col items-center justify-center mt-20'>
                 <Cat size={64} className='text-mainTheme mb-4' />
-                <p className='font-bold bg-mainTheme p-2 rounded-full'>
+                <p className='font-bold bg-mainTheme p-2 px-4 rounded-full text-white'>
                   할 일을 추가해 보세요!
                 </p>
               </div>
             )}
       </main>
 
-      {/* 우클릭 메뉴 (기존과 동일) */}
+      {/* 우클릭 메뉴 */}
       {menuPos && (
         <div
           className='fixed z-[100] bg-white shadow-2xl rounded-xl py-2 w-40'
@@ -383,21 +444,21 @@ const TodoList = () => {
             onClick={() => {
               if (selectedTodoId) removeTodo(selectedTodoId);
             }}
-            className='w-full px-4 text-red-500 hover:bg-red-50 text-sm flex items-center gap-2 font-bold'
+            className='w-full px-4 py-1 text-red-500 hover:bg-red-50 text-sm flex items-center gap-2 font-bold'
           >
             <Trash2 size={16} /> 삭제하기
           </button>
         </div>
       )}
 
-      {/* 플로팅 버튼: 클릭 시 인라인 입력창 활성화 */}
+      {/* 플로팅 버튼 */}
       {!isAdding && (
         <button
           className='fixed bottom-8 right-8 z-50 p-4 bg-mainTheme rounded-full shadow-2xl active:scale-90 transition-transform'
           style={{ color: mainTextMode === 'dark' ? '#000' : '#fff' }}
           onClick={handleStartAdd}
         >
-          <Plus size={20} />
+          <Plus size={24} />
         </button>
       )}
     </div>

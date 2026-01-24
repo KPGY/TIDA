@@ -10,7 +10,14 @@ export interface Todolist {
   id: string;
   content: string;
   completed: boolean;
-  subTodos: Todolist[]; // 재귀적 구조
+  subTodos: SubTodo[]; // 재귀적 구조
+  order: number;
+}
+
+interface SubTodo {
+  id: string;
+  content: string;
+  completed: boolean;
   order: number;
 }
 
@@ -66,6 +73,7 @@ interface SettingState
   // [투두 관련 액션]
   todos: Todolist[];
   addTodo: (content: string, subContents?: string[]) => void; // 서브 투두 배열 추가
+  addSubTodo: (parentId: string, content: string) => void;
   toggleTodo: (id: string) => void;
   removeTodo: (id: string) => void;
   removeCompleteTodo: () => void;
@@ -185,50 +193,73 @@ export const useColorStore = create<SettingState>()(
         }));
       },
 
-      toggleTodo: (id) => {
-        const updateRecursive = (list: Todolist[]): Todolist[] => {
-          return list.map((todo) => {
-            let newTodo = { ...todo };
+      addSubTodo: (parentId, content) => {
+        if (content.trim() === '') return;
 
-            // 1. 클릭한 대상 찾기
+        set(
+          (state): Partial<SettingState> => ({
+            // 1. 반환 타입을 Partial<SettingState>로 명시
+            todos: state.todos.map((todo): Todolist => {
+              // 2. 각 요소가 Todolist임을 명시
+              if (todo.id === parentId) {
+                const newSub: SubTodo = {
+                  id: crypto.randomUUID(),
+                  content: content,
+                  completed: false,
+                  order:
+                    todo.subTodos.length > 0
+                      ? Math.max(...todo.subTodos.map((s) => s.order)) + 1
+                      : 0,
+                };
+
+                // 반드시 Todolist 인터페이스의 모든 필드가 포함되도록 반환
+                return {
+                  ...todo,
+                  subTodos: [...todo.subTodos, newSub],
+                  completed: false,
+                };
+              }
+              return todo; // 조건에 맞지 않아도 Todolist 타입 객체 반환
+            }),
+          })
+        );
+      },
+
+      toggleTodo: (id) => {
+        set((state) => ({
+          todos: state.todos.map((todo) => {
+            // 1. 메인 투두를 클릭한 경우
             if (todo.id === id) {
               const nextStatus = !todo.completed;
-              // 본인과 모든 후손들을 본인의 새 상태와 동기화
-              const syncChildren = (
-                nodes: Todolist[],
-                status: boolean
-              ): Todolist[] =>
-                nodes.map((node) => ({
-                  ...node,
-                  completed: status,
-                  subTodos: syncChildren(node.subTodos, status),
-                }));
-
-              newTodo = {
+              return {
                 ...todo,
                 completed: nextStatus,
-                subTodos: syncChildren(todo.subTodos, nextStatus),
+                subTodos: todo.subTodos.map((sub) => ({
+                  ...sub,
+                  completed: nextStatus,
+                })),
               };
-            } else if (todo.subTodos.length > 0) {
-              // 2. 자식들 중 대상이 있는지 탐색
-              newTodo.subTodos = updateRecursive(todo.subTodos);
-
-              // 3. 자식의 상태가 변했을 수 있으므로 부모 상태 재계산 (핵심 로직)
-              // 서브 태스크가 존재할 때만 자식들의 상태를 체크
-              if (newTodo.subTodos.length > 0) {
-                const allSubCompleted = newTodo.subTodos.every(
-                  (sub) => sub.completed
-                );
-                newTodo.completed = allSubCompleted;
-              }
             }
 
-            return newTodo;
-          });
-        };
+            // 2. 서브 투두 중 하나를 클릭한 경우 탐색
+            const hasSub = todo.subTodos.some((sub) => sub.id === id);
+            if (hasSub) {
+              const updatedSubTodos = todo.subTodos.map((sub) =>
+                sub.id === id ? { ...sub, completed: !sub.completed } : sub
+              );
+              // 모든 서브 투두가 완료되었는지 확인
+              const allSubCompleted = updatedSubTodos.every(
+                (sub) => sub.completed
+              );
+              return {
+                ...todo,
+                subTodos: updatedSubTodos,
+                completed: allSubCompleted,
+              };
+            }
 
-        set((state) => ({
-          todos: updateRecursive(state.todos),
+            return todo;
+          }),
         }));
       },
 
