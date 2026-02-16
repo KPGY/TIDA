@@ -3,12 +3,12 @@
   "name": "my-nextron-app",
   "productName": "TIDA",
   "description": "Moza Made It",
-  "version": "1.2.3",
+  "version": "1.2.5",
   "author": "Yoshihide Shiono <shiono.yoshihide@gmail.com>",
   "main": "app/background.js",
   "scripts": {
     "dev": "nextron",
-    "build": "nextron build",
+    "build": "nextron builsd",
     "release": "nextron build -- --publish always",
     "postinstall": "electron-builder install-app-deps"
   },

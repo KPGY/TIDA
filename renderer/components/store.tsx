@@ -57,7 +57,8 @@ interface ContrastState {
 
 // 최종 상태 및 액션 통합 인터페이스
 interface SettingState
-  extends ThemeColors,
+  extends
+    ThemeColors,
     FontState,
     GradientColors,
     BackgroundState,
@@ -77,7 +78,11 @@ interface SettingState
   toggleTodo: (id: string) => void;
   removeTodo: (id: string) => void;
   removeCompleteTodo: () => void;
-  updateTodo: (id: string, content: string) => void;
+  updateTodo: (
+    id: string,
+    content: string,
+    subTodos: { id: string; content: string }[],
+  ) => void;
   clearCompleted: () => void;
 }
 
@@ -221,7 +226,7 @@ export const useColorStore = create<SettingState>()(
               }
               return todo; // 조건에 맞지 않아도 Todolist 타입 객체 반환
             }),
-          })
+          }),
         );
       },
 
@@ -245,11 +250,11 @@ export const useColorStore = create<SettingState>()(
             const hasSub = todo.subTodos.some((sub) => sub.id === id);
             if (hasSub) {
               const updatedSubTodos = todo.subTodos.map((sub) =>
-                sub.id === id ? { ...sub, completed: !sub.completed } : sub
+                sub.id === id ? { ...sub, completed: !sub.completed } : sub,
               );
               // 모든 서브 투두가 완료되었는지 확인
               const allSubCompleted = updatedSubTodos.every(
-                (sub) => sub.completed
+                (sub) => sub.completed,
               );
               return {
                 ...todo,
@@ -276,11 +281,24 @@ export const useColorStore = create<SettingState>()(
         }));
       },
 
-      updateTodo: (id, content) => {
+      updateTodo: (id, content, subTodos) => {
         set((state) => ({
-          todos: state.todos.map((todo) =>
-            todo.id === id ? { ...todo, content } : todo
-          ),
+          todos: state.todos.map((todo) => {
+            if (todo.id === id) {
+              return {
+                ...todo,
+                content: content,
+                // 넘어온 subTodos를 기반으로 상태 재구성
+                subTodos: subTodos.map((s, index) => ({
+                  id: s.id || crypto.randomUUID(), // ID가 없으면 생성(새로 추가된 경우)
+                  content: s.content,
+                  completed: false, // 수정 시 완료 여부를 유지하고 싶다면 로직 추가 필요
+                  order: index,
+                })),
+              };
+            }
+            return todo;
+          }),
         }));
       },
 
@@ -292,6 +310,6 @@ export const useColorStore = create<SettingState>()(
     }),
     {
       name: 'tida-setting-config', // LocalStorage 키
-    }
-  )
+    },
+  ),
 );
