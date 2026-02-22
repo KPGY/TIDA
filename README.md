@@ -2,7 +2,7 @@
 
 ### 타임라인 기능
 
-<p align="center"><img src="https://github.com/KPGY/TIDA/issues/1#issue-3974876364"></p>
+![image](https://github.com/KPGY/TIDA/issues/1#issue-3974876364)
 
 ```
 해당 어플은 nextron 기반으로 만든 데스크톱 타임라인 기능입니다.
@@ -15,7 +15,7 @@
 
 ### 설정페이지
 
-<p align="center"><img src="https://github.com/KPGY/TIDA/issues/2#issue-3974882432"></p>
+![image](https://github.com/KPGY/TIDA/issues/2#issue-3974882432)
 
 ```
 해당 페이지는 설정 페이지입니다, 앞서 설명한 커스터마이징을 설정하는 페이지입니다.
@@ -25,7 +25,7 @@
 
 ### 투두리스트
 
-<p align="center"><img src="https://github.com/KPGY/TIDA/issues/3#issue-3974886398"></p>
+![image](https://github.com/KPGY/TIDA/issues/3#issue-3974886398)
 
 ```
 해당 페이지는 투두리스트를 작성해서 관리하는 페이지입니다.
