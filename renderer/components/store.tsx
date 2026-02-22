@@ -1,24 +1,25 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { getContrastMode } from './textColor'; // 기존 유틸리티 함수
+import { getContrastMode } from './textColor'; // 해당 경로에 유틸리티가 있는지 확인하세요.
 
 // ------------------------------------------
 // 1. 인터페이스 정의
 // ------------------------------------------
 
+export interface SubTodo {
+  id: string;
+  content: string;
+  completed: boolean;
+  order: number;
+}
+
 export interface Todolist {
   id: string;
   content: string;
   completed: boolean;
-  subTodos: SubTodo[]; // 재귀적 구조
+  subTodos: SubTodo[];
   order: number;
-}
-
-interface SubTodo {
-  id: string;
-  content: string;
-  completed: boolean;
-  order: number;
+  color?: string; // 특정 투두의 개별 테두리 색상
 }
 
 interface ThemeColors {
@@ -70,10 +71,11 @@ interface SettingState
   setFontStyle: (key: keyof FontState, value: string) => void;
   setGradientMode: (mode: boolean) => void;
   setbgAttachmentPath: (path: string) => void;
+  reorderTodos: (newTodos: Todolist[]) => void;
 
   // [투두 관련 액션]
   todos: Todolist[];
-  addTodo: (content: string, subContents?: string[]) => void; // 서브 투두 배열 추가
+  addTodo: (content: string, subContents?: string[], color?: string) => void;
   addSubTodo: (parentId: string, content: string) => void;
   toggleTodo: (id: string) => void;
   removeTodo: (id: string) => void;
@@ -82,6 +84,7 @@ interface SettingState
     id: string,
     content: string,
     subTodos: { id: string; content: string }[],
+    color?: string,
   ) => void;
   clearCompleted: () => void;
 }
@@ -125,13 +128,12 @@ const defaultContrast: ContrastState = {
 };
 
 // ------------------------------------------
-// 3. Zustand 스토어 생성 (Persist 적용)
+// 3. Zustand 스토어 생성
 // ------------------------------------------
 
 export const useColorStore = create<SettingState>()(
   persist(
     (set, get) => ({
-      // --- 초기 상태 값 통합 ---
       ...defaultColors,
       ...defaultFont,
       ...defaultGradientColors,
@@ -140,7 +142,7 @@ export const useColorStore = create<SettingState>()(
       ...defaultContrast,
       todos: [],
 
-      // --- 설정(Theme) 액션 구현 ---
+      // --- 설정(Theme) 액션 ---
       setSingleColor: (key, color) => {
         const newContrastMode = getContrastMode(color);
         const textKeyMap: { [K in keyof ThemeColors]: keyof ContrastState } = {
@@ -173,22 +175,22 @@ export const useColorStore = create<SettingState>()(
         set({ bgAttachmentPath: path });
       },
 
-      // --- 투두(Todo) 액션 구현 ---
-      addTodo: (content, subContents = []) => {
-        // 메인 투두 생성
+      // --- 투두(Todo) 액션 ---
+
+      // 신규 투두 추가 (색상 포함)
+      addTodo: (content, subContents = [], color = 'transparent') => {
         const newTodo: Todolist = {
           id: crypto.randomUUID(),
           content,
           completed: false,
           order: get().todos.length,
-          // 서브 투두 문자열 배열을 Todolist 객체 배열로 변환
+          color: color,
           subTodos: subContents
-            .filter((sub) => sub.trim() !== '') // 빈 내용 제외
+            .filter((sub) => sub.trim() !== '')
             .map((sub, index) => ({
               id: crypto.randomUUID(),
               content: sub,
               completed: false,
-              subTodos: [], // 3단계 계층은 현재 빈 배열로 시작
               order: index,
             })),
         };
@@ -198,42 +200,34 @@ export const useColorStore = create<SettingState>()(
         }));
       },
 
+      // 하위 투두 단독 추가
       addSubTodo: (parentId, content) => {
         if (content.trim() === '') return;
-
-        set(
-          (state): Partial<SettingState> => ({
-            // 1. 반환 타입을 Partial<SettingState>로 명시
-            todos: state.todos.map((todo): Todolist => {
-              // 2. 각 요소가 Todolist임을 명시
-              if (todo.id === parentId) {
-                const newSub: SubTodo = {
-                  id: crypto.randomUUID(),
-                  content: content,
-                  completed: false,
-                  order:
-                    todo.subTodos.length > 0
-                      ? Math.max(...todo.subTodos.map((s) => s.order)) + 1
-                      : 0,
-                };
-
-                // 반드시 Todolist 인터페이스의 모든 필드가 포함되도록 반환
-                return {
-                  ...todo,
-                  subTodos: [...todo.subTodos, newSub],
-                  completed: false,
-                };
-              }
-              return todo; // 조건에 맞지 않아도 Todolist 타입 객체 반환
-            }),
+        set((state) => ({
+          todos: state.todos.map((todo) => {
+            if (todo.id === parentId) {
+              const newSub: SubTodo = {
+                id: crypto.randomUUID(),
+                content: content,
+                completed: false,
+                order: todo.subTodos.length,
+              };
+              return {
+                ...todo,
+                subTodos: [...todo.subTodos, newSub],
+                completed: false, // 하위 추가 시 완료 상태 해제
+              };
+            }
+            return todo;
           }),
-        );
+        }));
       },
 
+      // 완료 상태 토글 (메인 및 서브)
       toggleTodo: (id) => {
         set((state) => ({
           todos: state.todos.map((todo) => {
-            // 1. 메인 투두를 클릭한 경우
+            // 메인 투두를 클릭한 경우
             if (todo.id === id) {
               const nextStatus = !todo.completed;
               return {
@@ -246,13 +240,13 @@ export const useColorStore = create<SettingState>()(
               };
             }
 
-            // 2. 서브 투두 중 하나를 클릭한 경우 탐색
+            // 서브 투두 중 하나를 클릭한 경우
             const hasSub = todo.subTodos.some((sub) => sub.id === id);
             if (hasSub) {
               const updatedSubTodos = todo.subTodos.map((sub) =>
                 sub.id === id ? { ...sub, completed: !sub.completed } : sub,
               );
-              // 모든 서브 투두가 완료되었는지 확인
+              // 모든 서브 투두가 완료되었을 때만 메인도 완료 처리
               const allSubCompleted = updatedSubTodos.every(
                 (sub) => sub.completed,
               );
@@ -274,32 +268,42 @@ export const useColorStore = create<SettingState>()(
         }));
       },
 
-      // Zustand store 내부 액션
       removeCompleteTodo: () => {
         set((state) => ({
           todos: state.todos.filter((todo) => !todo.completed),
         }));
       },
 
-      updateTodo: (id, content, subTodos) => {
+      // 투두 수정 (내용, 하위 리스트, 색상 통합 업데이트)
+      updateTodo: (id, content, subTodos, color) => {
         set((state) => ({
           todos: state.todos.map((todo) => {
             if (todo.id === id) {
               return {
                 ...todo,
                 content: content,
-                // 넘어온 subTodos를 기반으로 상태 재구성
-                subTodos: subTodos.map((s, index) => ({
-                  id: s.id || crypto.randomUUID(), // ID가 없으면 생성(새로 추가된 경우)
-                  content: s.content,
-                  completed: false, // 수정 시 완료 여부를 유지하고 싶다면 로직 추가 필요
-                  order: index,
-                })),
+                color: color !== undefined ? color : todo.color,
+                subTodos: subTodos.map((s, index) => {
+                  // 기존에 있던 서브투두라면 완료 상태 유지
+                  const existingSub = todo.subTodos.find(
+                    (old) => old.id === s.id,
+                  );
+                  return {
+                    id: s.id || crypto.randomUUID(),
+                    content: s.content,
+                    completed: existingSub ? existingSub.completed : false,
+                    order: index,
+                  };
+                }),
               };
             }
             return todo;
           }),
         }));
+      },
+
+      reorderTodos: (newTodos) => {
+        set({ todos: newTodos });
       },
 
       clearCompleted: () => {
@@ -309,7 +313,7 @@ export const useColorStore = create<SettingState>()(
       },
     }),
     {
-      name: 'tida-setting-config', // LocalStorage 키
+      name: 'tida-setting-config', // 로컬스토리지 키
     },
   ),
 );
