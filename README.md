@@ -1,38 +1,38 @@
-<p align="center"><img src="https://i.imgur.com/a9QWW0v.png"></p>
+## TIDA 데스크톱 어플리케이션
 
-## Usage
+### 타임라인 기능
 
-### Create an App
-
-```
-# with npx
-$ npx create-nextron-app my-app --example with-tailwindcss
-
-# with yarn
-$ yarn create nextron-app my-app --example with-tailwindcss
-
-# with pnpm
-$ pnpm dlx create-nextron-app my-app --example with-tailwindcss
-```
-
-### Install Dependencies
+<p align="center"><img src="https://github.com/KPGY/TIDA/issues/1#issue-3974876364"></p>
 
 ```
-$ cd my-app
+해당 어플은 nextron 기반으로 만든 데스크톱 타임라인 기능입니다.
 
-# using yarn or npm
-$ yarn (or `npm install`)
+본인이 그때그때 생각나는 내용을 작성해 언제 작성했는지 확인이 가능한게 주 목적입니다.
 
-# using pnpm
-$ pnpm install --shamefully-hoist
-```
-
-### Use it
+배경이나 색상 글꼴 스타일/사이즈 등 커스터마이징이 가능한 특징이 있습니다.
 
 ```
-# development mode
-$ yarn dev (or `npm run dev` or `pnpm run dev`)
 
-# production build
-$ yarn build (or `npm run build` or `pnpm run build`)
+### 설정페이지
+
+<p align="center"><img src="https://github.com/KPGY/TIDA/issues/2#issue-3974882432"></p>
+
+```
+해당 페이지는 설정 페이지입니다, 앞서 설명한 커스터마이징을 설정하는 페이지입니다.
+
+메뉴는 직관적으로 알아볼수 있게 되어있고, 상단 컬러 on/off 버튼을 통해 그라데이션 적용 여부를 선택할수 있습니다.
+```
+
+### 투두리스트
+
+<p align="center"><img src="https://github.com/KPGY/TIDA/issues/3#issue-3974886398"></p>
+
+```
+해당 페이지는 투두리스트를 작성해서 관리하는 페이지입니다.
+
+투두리스트 작성(서브 리스트 작성)/ 서브 추가 / 수정 / 삭제 / 완료 / 순서변경이 가능합니다.
+
+서브 진행률 여부에 따라 왼쪽에 동그란 부분에 퍼센트가 표기됩니다.
+
+오작동을 위해 서브리스트 값이 있을경우, 메인 투두의 완료 원을 클릭을 방지했습니다.
 ```
