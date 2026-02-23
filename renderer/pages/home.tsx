@@ -53,7 +53,7 @@ declare global {
       invoke: (channel: string, value?: unknown) => Promise<any>;
       on: (
         channel: string,
-        callback: (...args: unknown[]) => void
+        callback: (...args: unknown[]) => void,
       ) => () => void;
     };
   }
@@ -115,8 +115,8 @@ const DiaryAttachmentList: React.FC<DiaryAttachmentListProps> = ({
     attachments.length === 1
       ? 'grid-cols-1'
       : attachments.length <= 3
-      ? 'grid-cols-2'
-      : 'grid-cols-3';
+        ? 'grid-cols-2'
+        : 'grid-cols-3';
 
   return (
     <div
@@ -207,7 +207,7 @@ const HomePage: NextPage = () => {
     const isoDate = date.toLocaleDateString('en-CA');
     const list: DiaryItem[] = await window.ipc.invoke(
       IPC_CHANNEL.GET_DIARY,
-      isoDate
+      isoDate,
     );
     setDiaryList(list);
   };
@@ -226,7 +226,7 @@ const HomePage: NextPage = () => {
   // NOTE: AttachmentModal의 onSave Prop 시그니처가 (files, stickers)를 받는 경우를 대비해, files만 사용
   const handleAttachmentsSelected = (
     files: Attachment[],
-    stickers?: Attachment[]
+    stickers?: Attachment[],
   ) => {
     setAttachmentsToSend(files); // 최종 파일 목록을 상태에 저장
     setIsAttachmentModalOpen(false); // 모달 닫기
@@ -235,7 +235,7 @@ const HomePage: NextPage = () => {
   // 4. ✨ 미리보기 항목에서 파일을 삭제하는 핸들러 추가
   const handleRemoveAttachment = (indexToRemove: number) => {
     setAttachmentsToSend((prev) =>
-      prev.filter((_, index) => index !== indexToRemove)
+      prev.filter((_, index) => index !== indexToRemove),
     );
   };
 
@@ -283,7 +283,7 @@ const HomePage: NextPage = () => {
 
     const unsubscribe = window.ipc.on(
       IPC_CHANNEL.DATE_CHANGED,
-      handleIPCDateChange
+      handleIPCDateChange,
     );
     setCurrentDate(new Date());
 
@@ -356,8 +356,8 @@ const HomePage: NextPage = () => {
         bgAttachmentPath
           ? 'bg-attachment bg-fixed'
           : gradientMode
-          ? 'bg-gradient-to-r from-bgTheme to-bgThemeEnd'
-          : 'bg-bgTheme'
+            ? 'bg-gradient-to-r from-bgTheme to-bgThemeEnd'
+            : 'bg-bgTheme'
       }`}
     >
       <AutoUpdateStatus />
@@ -484,7 +484,7 @@ const HomePage: NextPage = () => {
                   // 이미지 파일인 경우: 실제 이미지를 썸네일로 표시
                   <Image
                     src={`attachment-asset://${encodeURIComponent(
-                      att.filePath
+                      att.filePath,
                     )}`}
                     alt={att.fileName}
                     width={48}
