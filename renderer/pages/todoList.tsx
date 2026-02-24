@@ -88,7 +88,7 @@ const SortableTodoItem = ({
             >
               <GripVertical size={20} />
             </div>
-            <div className='flex-grow'>
+            <div className='flex-grow min-w-0'>
               {renderTodoItemMain(todo, onEditClick)}
             </div>
           </div>
@@ -372,7 +372,7 @@ const TodoList = () => {
     return (
       <div
         style={{ border: `3px solid ${todo.color || 'transparent'}` }}
-        className='flex items-center h-14 rounded-full bg-white shadow-md hover:shadow-lg transition-all w-full overflow-hidden'
+        className='flex items-center min-h-14 rounded-full bg-white shadow-md hover:shadow-lg w-full overflow-hidden'
       >
         <div className='w-12 flex-shrink-0 flex items-center justify-center'>
           <button
@@ -396,7 +396,9 @@ const TodoList = () => {
         <div
           className={`flex-grow font-bold min-w-0 ${todo.completed ? 'line-through text-gray-300' : 'text-black'}`}
         >
-          <p className='truncate text-sm ml-1'>{todo.content}</p>
+          <p className='whitespace-pre-wrap break-words text-sm ml-1'>
+            {todo.content}
+          </p>
         </div>
         <div className='flex items-center pr-2'>
           <button
