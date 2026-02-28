@@ -30,6 +30,7 @@ import { IPC_CHANNEL } from '../../main/ipc/channels';
 import ImageViewerModal from '../components/ImageModal';
 import AttachmentModal from '../components/attachFile';
 import TopBar from '../components/TopBar';
+import { TopBarType } from '../components/TopBar';
 
 // --- 인터페이스 및 헬퍼 함수 (기존과 동일) ---
 interface Attachment {
@@ -230,7 +231,7 @@ const HomePage: NextPage = () => {
     >
       <AutoUpdateStatus />
 
-      <TopBar />
+      <TopBar type={TopBarType.MAIN} />
 
       <header
         className={`flex justify-between p-4 items-center relative z-10 pt-10 ${gradientMode ? 'bg-gradient-to-r from-panelTheme to-panelThemeEnd' : 'bg-panelTheme'}`}

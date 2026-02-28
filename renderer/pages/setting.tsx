@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'; // X 아이콘 추가
 import { useColorStore } from '../components/store';
 import Topbar from '../components/TopBar';
+import { TopBarType } from '../components/TopBar';
 
 // Electron IPC 통신을 위한 타입 정의
 // window.ipc가 전역에 노출되어 있다고 가정합니다.
@@ -168,11 +169,11 @@ export default function SettingPage() {
 
   return (
     <div>
-      <Topbar />
+      <Topbar type={TopBarType.MAIN} />
       <header className='flex p-4 justify-between items-center bg-gray-50 shadow-sm pt-10 z-10 w-full'>
         <h1 className='text-lg font-baseFont text-gray-800'>설정</h1>
         <Link
-          className='text-gray-950 p-1 rounded-full hover:bg-gray-200 transition'
+          className='text-gray-950 rounded-full hover:bg-gray-200 transition'
           href='/home'
         >
           <Home size={20} className='text-mainTheme cursor-pointer' />
@@ -204,10 +205,10 @@ export default function SettingPage() {
         </div>
       )}
 
-      <main className='flex flex-col gap-6 p-4 md:p-8 max-w-4xl mx-auto mt-14 bg-gray-50'>
+      <main className='flex flex-col gap-5 p-4 md:p-8 w-full mx-auto bg-gray-50'>
         {/* === 색상 설정 영역 (2x2 Grid) === */}
         <div className='flex justify-between items-center border-b'>
-          <h2 className='text-xl font-baseFont font-bold text-gray-950  pb-2'>
+          <h2 className='text-xl font-baseFont font-bold text-gray-950 pb-2'>
             테마 색상
           </h2>
           <button

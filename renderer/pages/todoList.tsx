@@ -18,7 +18,8 @@ import {
   GripVertical,
 } from 'lucide-react';
 import { useColorStore } from '../components/store';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { TopBarType } from '../components/TopBar';
 
 // --- dnd-kit 임포트 ---
 import {
@@ -360,14 +361,35 @@ const TodoList = () => {
 
   const renderTodoItemMain = (todo, onEditClick) => {
     const totalCount = todo.subTodos?.length || 0;
+
     const completedCount =
       todo.subTodos?.filter((sub) => sub.completed).length || 0;
+
     const percentage =
       totalCount > 0
         ? Math.floor((completedCount / totalCount) * 100)
         : todo.completed
           ? 100
           : 0;
+
+    const isLineThrough =
+      totalCount > 0
+        ? totalCount === completedCount && totalCount !== 0
+        : todo.completed;
+
+    const handleMainCheck = () => {
+      if (totalCount > 0) {
+        // 하위 작업이 있으면, 메인 체크 대신 서브 목록 펼치기/닫기
+        setOpenSubTodoIds((prev) =>
+          prev.includes(todo.id)
+            ? prev.filter((i) => i !== todo.id)
+            : [...prev, todo.id],
+        );
+      } else {
+        // 하위 작업이 없으면 기존대로 토글
+        toggleTodo(todo.id);
+      }
+    };
 
     return (
       <div
@@ -377,11 +399,11 @@ const TodoList = () => {
         <div className='w-12 flex-shrink-0 flex items-center justify-center'>
           <button
             className={`relative flex items-center justify-center ${totalCount > 0 ? 'cursor-default' : 'cursor-pointer'}`}
-            onClick={() => toggleTodo(todo.id)}
+            onClick={handleMainCheck}
             disabled={totalCount > 0}
           >
             <ProgressCircle size={36} percentage={percentage} />
-            {todo.completed ? (
+            {isLineThrough ? (
               <Check className='absolute text-mainTheme' size={20} />
             ) : (
               totalCount > 0 &&
@@ -394,7 +416,9 @@ const TodoList = () => {
           </button>
         </div>
         <div
-          className={`flex-grow font-bold min-w-0 ${todo.completed ? 'line-through text-gray-300' : 'text-black'}`}
+          className={`flex-grow font-bold min-w-0 ${
+            isLineThrough ? 'line-through text-gray-300' : 'text-black'
+          }`}
         >
           <p className='whitespace-pre-wrap break-words text-sm ml-1'>
             {todo.content}
@@ -430,11 +454,22 @@ const TodoList = () => {
     );
   };
 
+  const totalCompletionPercentage = useMemo(() => {
+    if (todos.length === 0) return 0;
+
+    // 전체 메인 투두 수
+    const totalItems = todos.length;
+    // 완료된 메인 투두 수만 계산
+    const completedItems = todos.filter((todo) => todo.completed).length;
+
+    return Math.floor((completedItems / totalItems) * 100);
+  }, [todos]);
+
   return (
     <div
       className={`w-full min-h-screen flex flex-col ${bgAttachmentPath ? 'bg-attachment bg-fixed' : gradientMode ? 'bg-gradient-to-r from-bgTheme to-bgThemeEnd' : 'bg-bgTheme'}`}
     >
-      <TopBar />
+      <TopBar type={TopBarType.TODO} percent={totalCompletionPercentage} />
       <header
         className={`flex justify-between p-4 items-center relative ${gradientMode ? 'bg-gradient-to-r from-panelTheme to-panelThemeEnd' : 'bg-panelTheme'} pt-10 left-0 right-0 z-50`}
       >
