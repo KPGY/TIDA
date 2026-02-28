@@ -11,20 +11,20 @@ const TopBar = () => {
         <div className='flex gap-1'>
           <button
             onClick={() => window.ipc.invoke('WINDOW_MINIMIZE')}
-            className='p-2 hover:bg-blue-500/20 rounded-full transition-colors group cursor-pointer'
+            className='p-2 rounded-full transition-colors group cursor-pointer'
           >
             <Minus
               size={16}
-              className='text-blue-500 opacity-70 group-hover:opacity-100'
+              className='text-mainTheme opacity-80 group-hover:opacity-100'
             />
           </button>
           <button
             onClick={() => window.ipc.invoke('WINDOW_CLOSE')}
-            className='p-2 hover:bg-red-500/20 rounded-full transition-colors group cursor-pointer'
+            className='p-2 rounded-full transition-colors group cursor-pointer'
           >
             <X
               size={16}
-              className='text-red-500 opacity-70 group-hover:opacity-100'
+              className='text-mainTheme opacity-80 group-hover:opacity-100'
             />
           </button>
         </div>

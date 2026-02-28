@@ -452,7 +452,7 @@ const TodoList = () => {
         </div>
       </header>
 
-      <main className='flex flex-col pt-16 pb-24 px-4 relative'>
+      <main className='flex flex-col pt-2 pb-24 px-4 relative'>
         <div className='flex justify-end mb-2'>
           <button
             onClick={() => removeCompleteTodo()}
