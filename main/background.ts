@@ -1,5 +1,5 @@
 import path from 'path';
-import { app, Menu } from 'electron';
+import { app, Menu, ipcMain } from 'electron';
 import serve from 'electron-serve';
 import { createWindow } from './helpers';
 import log from 'electron-log';
@@ -51,6 +51,14 @@ initializeFileUploaderIPC();
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
+  });
+
+  ipcMain.handle('WINDOW_MINIMIZE', () => {
+    mainWindow.minimize();
+  });
+
+  ipcMain.handle('WINDOW_CLOSE', () => {
+    mainWindow.close();
   });
 
   // ****************************************************

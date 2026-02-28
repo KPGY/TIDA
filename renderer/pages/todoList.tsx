@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import {
   Home,
-  Search,
   ListTodo,
   Settings,
   Plus,
@@ -39,6 +38,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import TopBar from '../components/TopBar';
 
 // --- 1. 개별 Sortable 아이템 컴포넌트 ---
 const SortableTodoItem = ({
@@ -241,10 +241,10 @@ const TodoList = () => {
   // --- 공통 렌더링 함수: 수정 모드 UI ---
   const renderEditorUI = (onSave: () => void, onCancel: () => void) => (
     <div
-      className={`flex flex-col animate-in fade-in slide-in-from-top-4 duration-300 w-full z-10 relative 
-    ${isAdding ? 'mb-3' : 'mb-1'}`} // 추가 모드일 때는 mb-6으로 넉넉히, 에딧 모드일 때는 mb-2로 타이트하게
+      className={`flex flex-col animate-in fade-in slide-in-from-top-4 duration-300 w-full z-10 relative
+    ${isAdding ? 'mb-3' : 'mb-1'}`} // 추가 모드일 때는 mb-6으로 넉넉히, 에딧 모드일 때는 mb-1로 타이트하게
     >
-      <div className='flex items-center gap-1'>
+      <div className='flex items-center gap-1 min-w-0'>
         <div className='w-7 flex-shrink-0' />
         <div
           style={{ border: `3px solid ${selectedColor}` }}
@@ -260,7 +260,7 @@ const TodoList = () => {
             onChange={(e) => setNewTodoContent(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && onSave()}
             placeholder='할 일을 입력하세요'
-            className='flex-grow bg-transparent outline-none text-sm font-bold ml-1 text-black min-w-0 h-full'
+            className='flex-grow bg-transparent outline-none text-sm font-bold ml-1 text-black min-w-0 h-full w-full'
           />
           <div className='flex items-center gap-1 pr-2 relative'>
             <button
@@ -434,15 +434,15 @@ const TodoList = () => {
     <div
       className={`w-full min-h-screen flex flex-col ${bgAttachmentPath ? 'bg-attachment bg-fixed' : gradientMode ? 'bg-gradient-to-r from-bgTheme to-bgThemeEnd' : 'bg-bgTheme'}`}
     >
+      <TopBar />
       <header
-        className={`flex justify-between p-4 items-center fixed ${gradientMode ? 'bg-gradient-to-r from-panelTheme to-panelThemeEnd' : 'bg-panelTheme'} top-0 left-0 right-0 z-50 app-drag`}
+        className={`flex justify-between p-4 items-center relative ${gradientMode ? 'bg-gradient-to-r from-panelTheme to-panelThemeEnd' : 'bg-panelTheme'} pt-10 left-0 right-0 z-50`}
       >
         <p className='text-textPanelTheme text-dynamic font-baseFont'>{`${currentDate.getMonth() + 1}월 ${currentDate.getDate()}일 (${currentDate.toLocaleDateString('ko-KR', { weekday: 'short' })})`}</p>
-        <div className='flex gap-4 app-no-drag items-center'>
+        <div className='flex gap-4 items-center'>
           <Link href='./home'>
             <Home size={20} className='text-mainTheme' />
           </Link>
-          <Search size={20} className='text-mainTheme' />
           <Link href='./home'>
             <ListTodo size={20} className='text-mainTheme' />
           </Link>

@@ -10,6 +10,7 @@ import {
   X,
 } from 'lucide-react'; // X 아이콘 추가
 import { useColorStore } from '../components/store';
+import Topbar from '../components/TopBar';
 
 // Electron IPC 통신을 위한 타입 정의
 // window.ipc가 전역에 노출되어 있다고 가정합니다.
@@ -167,10 +168,11 @@ export default function SettingPage() {
 
   return (
     <div>
-      <header className='flex p-4 justify-between items-center bg-gray-50 shadow-sm app-drag fixed top-0 z-10 w-full'>
+      <Topbar />
+      <header className='flex p-4 justify-between items-center bg-gray-50 shadow-sm pt-10 z-10 w-full'>
         <h1 className='text-lg font-baseFont text-gray-800'>설정</h1>
         <Link
-          className='text-gray-950 p-1 rounded-full hover:bg-gray-200 transition app-no-drag'
+          className='text-gray-950 p-1 rounded-full hover:bg-gray-200 transition'
           href='/home'
         >
           <Home size={20} className='text-mainTheme cursor-pointer' />
@@ -420,8 +422,8 @@ export default function SettingPage() {
             bgAttachmentPath
               ? 'bg-attachment'
               : gradientMode
-              ? 'bg-gradient-to-r from-bgTheme to-bgThemeEnd'
-              : 'bg-bgTheme'
+                ? 'bg-gradient-to-r from-bgTheme to-bgThemeEnd'
+                : 'bg-bgTheme'
           } flex flex-col justify-center items-center overflow-hidden`}
           // 배경색과 폰트 스타일을 직접 적용하여 미리보기
         >

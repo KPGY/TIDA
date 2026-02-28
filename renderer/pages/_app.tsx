@@ -66,7 +66,7 @@ function MyApp({ Component, pageProps }: AppProps) {
       // 최종 URL 형식으로 CSS 변수에 할당
       rootStyle.setProperty(
         '--bg-attachment-path',
-        `url("attachment-asset://${encodedPath}")`
+        `url("attachment-asset://${encodedPath}")`,
       );
     } else {
       // 경로가 없을 경우 'none'을 할당하여 이미지 미표시 상태를 명확히 함
