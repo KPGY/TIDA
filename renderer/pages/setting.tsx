@@ -30,9 +30,9 @@ const IPC_CHANNEL_UPLOAD_BACKGROUND = 'upload-background';
 // 시각적 구분을 위한 폰트 옵션 목록
 const fontOptions = [
   {
-    label: '고딕 (기본)',
-    tailwindClass: 'font-sans',
-    cssValue: 'system-ui, sans-serif', // 가장 안정적인 시스템 기본 폰트
+    label: '얇은 고딕',
+    tailwindClass: 'font-extralight',
+    cssValue: 'Arial, sans-serif', // 가장 안정적인 시스템 기본 폰트
   },
   {
     label: '명조 (세리프)',
@@ -40,14 +40,12 @@ const fontOptions = [
     cssValue: 'Georgia, "Tims New Roman", serif',
   },
   {
-    label: '고정폭 (모노)',
-    tailwindClass: 'font-mono',
-    cssValue: 'ui-monospace, monospace',
+    label: '마비노기 폰트',
+    cssValue: 'Mabinogi, sans-serif', // CSS에서 정의한 이름
   },
   {
-    label: '얇은 고딕',
-    tailwindClass: 'font-extralight', // Tailwind 클래스 사용 (미리보기용)
-    cssValue: 'Arial, sans-serif', // 얇은 느낌을 줄 수 있는 폰트
+    label: '페이퍼로지 미디엄',
+    cssValue: 'MyCustomFont, sans-serif', // CSS에서 정의한 이름
   },
 ];
 
@@ -170,7 +168,7 @@ export default function SettingPage() {
   return (
     <div>
       <Topbar type={TopBarType.MAIN} />
-      <header className='flex p-4 justify-between items-center bg-gray-50 shadow-sm pt-10 z-10 w-full'>
+      <header className='flex px-4 justify-between items-center bg-gray-50 shadow-sm pt-10 z-10 w-full'>
         <h1 className='text-lg font-baseFont text-gray-800'>설정</h1>
         <Link
           className='text-gray-950 rounded-full hover:bg-gray-200 transition'
@@ -205,7 +203,7 @@ export default function SettingPage() {
         </div>
       )}
 
-      <main className='flex flex-col gap-5 p-4 md:p-8 w-full mx-auto bg-gray-50'>
+      <main className='flex flex-col gap-5 px-4 py-2 md:p-8 w-full mx-auto bg-gray-50'>
         {/* === 색상 설정 영역 (2x2 Grid) === */}
         <div className='flex justify-between items-center border-b'>
           <h2 className='text-xl font-baseFont font-bold text-gray-950 pb-2'>

@@ -1,4 +1,5 @@
-import { X, Minus, BatteryLow, BatteryFull, BatteryMedium } from 'lucide-react';
+import { X, Minus, Annoyed, Frown, Smile } from 'lucide-react';
+import Image from 'next/image';
 
 export enum TopBarType {
   MAIN = 'MAIN',
@@ -12,31 +13,39 @@ interface TopBarProps {
 }
 
 const TopBar: React.FC<TopBarProps> = ({ type, percent = 0 }) => {
-  const getStatusIcon = () => {
-    if (percent === 0) return <BatteryLow size={20} className='text-red-400' />;
-    if (percent < 100)
-      return <BatteryMedium size={20} className='text-orange-400' />;
-    else return <BatteryFull size={20} className='text-green-400' />;
+  const getStatus = () => {
+    if (percent === 0)
+      return (
+        <div className='text-mainTheme text-dynamic font-bold p-1 mt-1 flex gap-1 items-center antialiased font-baseFont'>
+          <Smile size={20} className='text-green-400 -mt-1' />할 일이 없습니다
+        </div>
+      );
+    if (percent < 10)
+      return (
+        <div className='text-mainTheme text-dynamic font-bold p-1 mt-1 flex gap-1 items-center antialiased font-baseFont'>
+          <Annoyed size={20} className='text-yellow-400 -mt-1' />총 {percent}
+          개의 할 일이 있습니다
+        </div>
+      );
+    else
+      return (
+        <div className='text-mainTheme text-dynamic font-bold p-1 mt-1 flex gap-1 items-center antialiased font-baseFont'>
+          <Frown size={20} className='text-red-400 -mt-1' />할 일이
+          캐많습니다...
+        </div>
+      );
   };
 
   return (
     <div className='fixed top-0 left-0 right-0 h-10 flex items-center justify-between px-2 z-[90] app-drag pointer-events-auto'>
       <div className='flex items-center'>
         {type === TopBarType.MAIN && (
-          <div className='text-mainTheme font-bold p-2 text-sm'>TIDA</div>
-        )}
-
-        {type === TopBarType.TODO && (
-          <div className='text-mainTheme text-sm font-bold p-2 flex gap-1 items-center antialiased'>
-            {/* 🚀 아이콘을 y축으로 1px~1.5px 정도 내립니다 */}
-            <div className='translate-y-[1px] flex items-center justify-center'>
-              {getStatusIcon()}
-            </div>
-
-            {/* 텍스트의 line-height를 조절해서 높이를 맞춥니다 */}
-            <span className='leading-none'>{percent}% 완료했습니다!</span>
+          <div className='text-mainTheme p-2 text-base font-sans font-bold mt-1'>
+            TIDA
           </div>
         )}
+
+        {type === TopBarType.TODO && <>{getStatus()}</>}
       </div>
 
       <div className='flex gap-1 app-no-drag'>

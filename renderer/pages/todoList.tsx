@@ -454,22 +454,20 @@ const TodoList = () => {
     );
   };
 
-  const totalCompletionPercentage = useMemo(() => {
+  const todoLength = useMemo(() => {
     if (todos.length === 0) return 0;
 
-    // 전체 메인 투두 수
-    const totalItems = todos.length;
-    // 완료된 메인 투두 수만 계산
-    const completedItems = todos.filter((todo) => todo.completed).length;
+    // 완료되지 않은 메인 투두만 필터링
+    const uncompletedItems = todos.filter((todo) => !todo.completed);
 
-    return Math.floor((completedItems / totalItems) * 100);
+    return uncompletedItems.length;
   }, [todos]);
 
   return (
     <div
       className={`w-full min-h-screen flex flex-col ${bgAttachmentPath ? 'bg-attachment bg-fixed' : gradientMode ? 'bg-gradient-to-r from-bgTheme to-bgThemeEnd' : 'bg-bgTheme'}`}
     >
-      <TopBar type={TopBarType.TODO} percent={totalCompletionPercentage} />
+      <TopBar type={TopBarType.TODO} percent={todoLength} />
       <header
         className={`flex justify-between p-4 items-center relative ${gradientMode ? 'bg-gradient-to-r from-panelTheme to-panelThemeEnd' : 'bg-panelTheme'} pt-10 left-0 right-0 z-50`}
       >

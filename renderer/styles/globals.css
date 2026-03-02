@@ -14,6 +14,21 @@
   }
 }
 
+@font-face {
+  font-family: 'Mabinogi';
+  /* woff2 대신 ttf 파일 경로를 넣어주세요 */
+  src: url('/fonts/Mabinogi_Classic_TTF.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'MyCustomFont';
+  src: url('/fonts/Paperlogy-5Medium.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
 html::-webkit-scrollbar {
   display: none;
 }

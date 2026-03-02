@@ -234,7 +234,7 @@ const HomePage: NextPage = () => {
       <TopBar type={TopBarType.MAIN} />
 
       <header
-        className={`flex justify-between p-4 items-center relative z-10 pt-10 ${gradientMode ? 'bg-gradient-to-r from-panelTheme to-panelThemeEnd' : 'bg-panelTheme'}`}
+        className={`flex justify-between px-4 items-center relative z-10 pt-10 ${gradientMode ? 'bg-gradient-to-r from-panelTheme to-panelThemeEnd' : 'bg-panelTheme'}`}
       >
         <p className='text-textPanelTheme text-dynamic font-baseFont'>
           {formattedHeaderDate}
