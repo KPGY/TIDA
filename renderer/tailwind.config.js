@@ -1,5 +1,4 @@
 /** @type {import('tailwindcss').Config} */
-import { text } from 'stream/consumers';
 import plugin from 'tailwindcss/plugin';
 
 export const content = [

@@ -8,6 +8,8 @@ import {
   Sparkles,
   Image as ImageIcon,
   X,
+  ListTodo,
+  Coffee,
 } from 'lucide-react'; // X 아이콘 추가
 import { useColorStore } from '../components/store';
 import Topbar from '../components/TopBar';
@@ -91,6 +93,11 @@ export default function SettingPage() {
     return selectedOption ? selectedOption.tailwindClass : 'font-sans';
   }, [baseFont]);
 
+  const [isCoffeeModalOpen, setIsCoffeeModalOpen] = useState(false);
+
+  const openCoffeeModal = () => setIsCoffeeModalOpen(true);
+  const closeCoffeeModal = () => setIsCoffeeModalOpen(false);
+
   // 글자 크기 슬라이더 핸들러
   const handleFontSizeChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFontStyle('fontSize', `${e.target.value}px`);
@@ -165,18 +172,33 @@ export default function SettingPage() {
     setFeedback({ message: '배경 이미지가 제거되었습니다.', type: 'success' });
   };
 
+  const coffemodal = () => {
+    alert(
+      '커피 한 잔 사주기 기능은 아직 준비 중입니다! 조금만 기다려주세요 :)',
+    );
+  };
+
   return (
     <div>
-      <Topbar type={TopBarType.MAIN} />
-      <header className='flex px-4 justify-between items-center bg-gray-50 shadow-sm pt-10 z-10 w-full'>
-        <h1 className='text-lg font-baseFont text-gray-800'>설정</h1>
-        <Link
-          className='text-gray-950 rounded-full hover:bg-gray-200 transition'
-          href='/home'
-        >
-          <Home size={20} className='text-mainTheme cursor-pointer' />
-        </Link>
-      </header>
+      <Topbar type={TopBarType.SETTING}>
+        <div className='flex px-4 justify-between items-center bg-gray-50 w-full'>
+          <h1 className='text-lg font-baseFont text-gray-800'>설정</h1>
+          <div className='flex gap-4'>
+            <Link
+              className='text-gray-950 rounded-full hover:bg-gray-200 transition'
+              href='/home'
+            >
+              <Home size={20} className='text-mainTheme cursor-pointer' />
+            </Link>
+            <Link
+              className='text-gray-950 rounded-full hover:bg-gray-200 transition'
+              href='/todoList'
+            >
+              <ListTodo size={20} className='text-mainTheme cursor-pointer' />
+            </Link>
+          </div>
+        </div>
+      </Topbar>
 
       {/* === 피드백 메시지 (Alert 대체) === */}
       {feedback && (
@@ -203,7 +225,7 @@ export default function SettingPage() {
         </div>
       )}
 
-      <main className='flex flex-col gap-5 px-4 py-2 md:p-8 w-full mx-auto bg-gray-50'>
+      <main className='flex flex-col gap-5 px-4 py-2 mt-16 md:p-8 w-full mx-auto bg-gray-50'>
         {/* === 색상 설정 영역 (2x2 Grid) === */}
         <div className='flex justify-between items-center border-b'>
           <h2 className='text-xl font-baseFont font-bold text-gray-950 pb-2'>
@@ -438,7 +460,49 @@ export default function SettingPage() {
             창입니다.
           </p>
         </div>
+        {isCoffeeModalOpen && (
+          <div
+            className='fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm'
+            onClick={closeCoffeeModal} // 배경 클릭 시 닫기
+          >
+            <div
+              className='relative bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center animate-in fade-in zoom-in duration-200'
+              onClick={(e) => e.stopPropagation()} // 이미지 영역 클릭 시 닫힘 방지
+            >
+              {/* 닫기 버튼 */}
+              <button
+                onClick={closeCoffeeModal}
+                className='absolute -top-3 -right-3 bg-gray-900 text-white rounded-full p-1 shadow-lg hover:bg-gray-700 transition-colors'
+              >
+                <X size={20} />
+              </button>
+
+              {/* QR 이미지 영역 */}
+              <div className='bg-white p-2 rounded-xl'>
+                <img
+                  src='/images/QR image.jpg' // 실제 본인의 QR 이미지 경로로 수정하세요
+                  alt='카카오페이 송금 QR'
+                  className='w-64 h-64 object-contain'
+                />
+              </div>
+
+              <p className='mt-4 font-baseFont text-gray-900 font-bold'>
+                카카오페이로 응원하기 ☕
+              </p>
+              <p className='text-xs text-gray-500 mt-1'>
+                보내주신 응원은 TIDA 개발에 큰 힘이 됩니다.
+              </p>
+            </div>
+          </div>
+        )}
       </main>
+      <button
+        onClick={openCoffeeModal}
+        className='fixed bottom-4 right-4 bg-mainTheme font-baseFont flex text-textMainTheme p-4 rounded-full shadow-lg hover:bg-mainThemeHover transition-colors gap-1'
+      >
+        <Coffee size={18} className='mt-1' />
+        커피 한 잔
+      </button>
     </div>
   );
 }

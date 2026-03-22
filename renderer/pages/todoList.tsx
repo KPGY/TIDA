@@ -467,26 +467,31 @@ const TodoList = () => {
     <div
       className={`w-full min-h-screen flex flex-col ${bgAttachmentPath ? 'bg-attachment bg-fixed' : gradientMode ? 'bg-gradient-to-r from-bgTheme to-bgThemeEnd' : 'bg-bgTheme'}`}
     >
-      <TopBar type={TopBarType.TODO} percent={todoLength} />
-      <header
-        className={`flex justify-between p-4 items-center relative ${gradientMode ? 'bg-gradient-to-r from-panelTheme to-panelThemeEnd' : 'bg-panelTheme'} pt-10 left-0 right-0 z-50`}
+      <TopBar
+        type={TopBarType.TODO}
+        percent={todoLength}
+        gradientMode={gradientMode}
       >
-        <p className='text-textPanelTheme text-dynamic font-baseFont'>{`${currentDate.getMonth() + 1}월 ${currentDate.getDate()}일 (${currentDate.toLocaleDateString('ko-KR', { weekday: 'short' })})`}</p>
-        <div className='flex gap-4 items-center'>
-          <Link href='./home'>
-            <Home size={20} className='text-mainTheme' />
-          </Link>
-          <Link href='./home'>
-            <ListTodo size={20} className='text-mainTheme' />
-          </Link>
-          <Link href='/setting'>
-            <Settings size={20} className='text-mainTheme' />
-          </Link>
-        </div>
-      </header>
+        <header
+          className={`flex justify-between px-4 pb-4 pt-1 items-center relative left-0 right-0`}
+        >
+          <p className='text-textPanelTheme text-dynamic font-baseFont'>{`${currentDate.getMonth() + 1}월 ${currentDate.getDate()}일 (${currentDate.toLocaleDateString('ko-KR', { weekday: 'short' })})`}</p>
+          <div className='flex gap-4 items-center'>
+            <Link href='./home'>
+              <Home size={20} className='text-mainTheme' />
+            </Link>
+            <Link href='./home'>
+              <ListTodo size={20} className='text-mainTheme' />
+            </Link>
+            <Link href='/setting'>
+              <Settings size={20} className='text-mainTheme' />
+            </Link>
+          </div>
+        </header>
+      </TopBar>
 
-      <main className='flex flex-col pt-2 pb-24 px-4 relative'>
-        <div className='flex justify-end mb-2'>
+      <main className='flex flex-col pt-2 pb-24 px-4 relative mt-20'>
+        <div className='flex justify-end mb-2 mt-1'>
           <button
             onClick={() => removeCompleteTodo()}
             className='p-1 text-red-500 bg-red-100 flex items-center gap-2 font-bold rounded-lg'

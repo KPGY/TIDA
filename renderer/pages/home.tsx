@@ -231,53 +231,54 @@ const HomePage: NextPage = () => {
     >
       <AutoUpdateStatus />
 
-      <TopBar type={TopBarType.MAIN} />
+      <TopBar type={TopBarType.MAIN} gradientMode={gradientMode}>
+        <header
+          className={`flex justify-between px-4 items-center relative ${gradientMode ? 'bg-gradient-to-r from-panelTheme to-panelThemeEnd' : 'bg-panelTheme'}`}
+        >
+          <p className='text-textPanelTheme text-dynamic font-baseFont'>
+            {formattedHeaderDate}
+          </p>
+          <div className='flex gap-4 items-center'>
+            <button onClick={handleTodayClick}>
+              <Home size={20} className='text-mainTheme cursor-pointer' />
+            </button>
+            <Search size={20} className='text-mainTheme cursor-pointer' />
+            <Link href='/todoList'>
+              <ListTodo size={20} className='text-mainTheme cursor-pointer' />
+            </Link>
+            <Link href='/setting'>
+              <Settings size={20} className='text-mainTheme cursor-pointer' />
+            </Link>
+          </div>
+        </header>
 
-      <header
-        className={`flex justify-between px-4 items-center relative z-10 pt-10 ${gradientMode ? 'bg-gradient-to-r from-panelTheme to-panelThemeEnd' : 'bg-panelTheme'}`}
-      >
-        <p className='text-textPanelTheme text-dynamic font-baseFont'>
-          {formattedHeaderDate}
-        </p>
-        <div className='flex gap-4 items-center'>
-          <button onClick={handleTodayClick}>
-            <Home size={20} className='text-mainTheme cursor-pointer' />
-          </button>
-          <Search size={20} className='text-mainTheme cursor-pointer' />
-          <Link href='/todoList'>
-            <ListTodo size={20} className='text-mainTheme cursor-pointer' />
-          </Link>
-          <Link href='/setting'>
-            <Settings size={20} className='text-mainTheme cursor-pointer' />
-          </Link>
+        {/* 3. 7일 날짜 선택바 (Fixed 해제 -> Relative) */}
+        <div
+          className={`w-full flex justify-between items-center px-4 py-2 overflow-x-auto relative z-10 ${gradientMode ? 'bg-gradient-to-r from-panelTheme to-panelThemeEnd' : 'bg-panelTheme'}`}
+        >
+          {weekDates.map((date, index) => {
+            const isSelected =
+              date.toDateString() === currentDate.toDateString();
+            return (
+              <div
+                key={index}
+                className={`flex flex-col items-center p-2 rounded-lg cursor-pointer flex-shrink-0 w-1/7 min-w-[14%] transition duration-200 ${isSelected ? (gradientMode ? 'bg-gradient-to-r from-mainTheme to-mainThemeEnd text-textMainTheme rounded-full font-bold shadow-md' : 'bg-mainTheme text-textMainTheme rounded-full font-bold shadow-md') : 'text-textPanelTheme hover:bg-black/5'}`}
+                onClick={() => handleDateChange(date)}
+              >
+                <span className='text-dynamic font-baseFont'>
+                  {date.toLocaleDateString('ko-KR', { weekday: 'short' })}
+                </span>
+                <span className='text-dynamic font-baseFont'>
+                  {date.getDate()}
+                </span>
+              </div>
+            );
+          })}
         </div>
-      </header>
-
-      {/* 3. 7일 날짜 선택바 (Fixed 해제 -> Relative) */}
-      <div
-        className={`w-full flex justify-between items-center px-4 py-2 overflow-x-auto relative z-10 ${gradientMode ? 'bg-gradient-to-r from-panelTheme to-panelThemeEnd' : 'bg-panelTheme'}`}
-      >
-        {weekDates.map((date, index) => {
-          const isSelected = date.toDateString() === currentDate.toDateString();
-          return (
-            <div
-              key={index}
-              className={`flex flex-col items-center p-2 rounded-lg cursor-pointer flex-shrink-0 w-1/7 min-w-[14%] transition duration-200 ${isSelected ? (gradientMode ? 'bg-gradient-to-r from-mainTheme to-mainThemeEnd text-textMainTheme rounded-full font-bold shadow-md' : 'bg-mainTheme text-textMainTheme rounded-full font-bold shadow-md') : 'text-textPanelTheme hover:bg-black/5'}`}
-              onClick={() => handleDateChange(date)}
-            >
-              <span className='text-dynamic font-baseFont'>
-                {date.toLocaleDateString('ko-KR', { weekday: 'short' })}
-              </span>
-              <span className='text-dynamic font-baseFont'>
-                {date.getDate()}
-              </span>
-            </div>
-          );
-        })}
-      </div>
+      </TopBar>
 
       {/* 4. 메인 영역 (헤더가 고정이 아니므로 pt 여백을 대폭 줄임) */}
-      <main className='flex-grow p-4 text-gray-950 overflow-y-auto pb-24 flex flex-col-reverse relative'>
+      <main className='flex-grow p-4 text-gray-950 overflow-y-auto pb-24 mt-36 flex flex-col-reverse relative'>
         {diaryList.map((item) => (
           <div
             key={item.id}
