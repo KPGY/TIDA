@@ -172,28 +172,16 @@ export default function SettingPage() {
     setFeedback({ message: '배경 이미지가 제거되었습니다.', type: 'success' });
   };
 
-  const coffemodal = () => {
-    alert(
-      '커피 한 잔 사주기 기능은 아직 준비 중입니다! 조금만 기다려주세요 :)',
-    );
-  };
-
   return (
     <div>
       <Topbar type={TopBarType.SETTING}>
         <div className='flex px-4 justify-between items-center bg-gray-50 w-full'>
           <h1 className='text-lg font-baseFont text-gray-800'>설정</h1>
           <div className='flex gap-4'>
-            <Link
-              className='text-gray-950 rounded-full hover:bg-gray-200 transition'
-              href='/home'
-            >
+            <Link className='text-gray-950 rounded-full' href='/home'>
               <Home size={20} className='text-mainTheme cursor-pointer' />
             </Link>
-            <Link
-              className='text-gray-950 rounded-full hover:bg-gray-200 transition'
-              href='/todoList'
-            >
+            <Link className='text-gray-950 rounded-full' href='/todoList'>
               <ListTodo size={20} className='text-mainTheme cursor-pointer' />
             </Link>
           </div>

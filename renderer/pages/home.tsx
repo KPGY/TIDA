@@ -242,7 +242,6 @@ const HomePage: NextPage = () => {
             <button onClick={handleTodayClick}>
               <Home size={20} className='text-mainTheme cursor-pointer' />
             </button>
-            <Search size={20} className='text-mainTheme cursor-pointer' />
             <Link href='/todoList'>
               <ListTodo size={20} className='text-mainTheme cursor-pointer' />
             </Link>
@@ -370,7 +369,7 @@ const HomePage: NextPage = () => {
 
       {isCalendarOpen && (
         <div
-          className='absolute top-28 left-0 right-0 bottom-0 z-20 flex justify-center p-4'
+          className='absolute top-32 left-0 right-0 bottom-0 z-20 flex justify-center p-4 mt-2'
           onClick={() => setIsCalendarOpen(false)}
         >
           <div onClick={(e) => e.stopPropagation()}>
