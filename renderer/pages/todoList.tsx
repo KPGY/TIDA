@@ -38,7 +38,6 @@ import {
   verticalListSortingStrategy,
   useSortable,
 } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import TopBar from '../components/TopBar';
 
 // --- 1. 하위 작업용 Sortable 아이템 컴포넌트 (추가됨) ---
@@ -79,7 +78,7 @@ const SortableSubTodoItem = ({ sub, toggleTodo }: any) => {
         />
       </button>
       <p
-        className={`text-xs font-bold ml-3 ${
+        className={`text-xs font-bold ml-3 break-words whitespace-pre-wrap flex-grow min-w-0 ${
           sub.completed ? 'line-through text-gray-400' : 'text-black'
         }`}
       >
