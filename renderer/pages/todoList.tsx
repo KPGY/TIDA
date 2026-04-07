@@ -41,7 +41,55 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import TopBar from '../components/TopBar';
 
-// --- 1. 개별 Sortable 아이템 컴포넌트 ---
+// --- 1. 하위 작업용 Sortable 아이템 컴포넌트 (추가됨) ---
+const SortableSubTodoItem = ({ sub, toggleTodo }: any) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: sub.id });
+
+  const style = {
+    transform: transform ? `translate3d(0px, ${transform.y}px, 0)` : undefined,
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : 'auto',
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className='flex items-center rounded-full bg-white/95 h-9 px-3 shadow-sm ml-1 group/sub'
+    >
+      <div
+        {...attributes}
+        {...listeners}
+        className='cursor-grab active:cursor-grabbing text-gray-300 hover:text-mainTheme mr-1 p-1'
+      >
+        <GripVertical size={14} />
+      </div>
+      <button onClick={() => toggleTodo(sub.id)}>
+        <Circle
+          className={sub.completed ? 'text-mainTheme' : 'text-gray-200'}
+          size={18}
+        />
+      </button>
+      <p
+        className={`text-xs font-bold ml-3 ${
+          sub.completed ? 'line-through text-gray-400' : 'text-black'
+        }`}
+      >
+        {sub.content}
+      </p>
+    </div>
+  );
+};
+
+// --- 2. 개별 Sortable 메인 아이템 컴포넌트 ---
 const SortableTodoItem = ({
   todo,
   editingTodoId,
@@ -50,9 +98,9 @@ const SortableTodoItem = ({
   editingSubTodoId,
   AddTodoItemSub,
   openSubTodoIds,
-  renderTodoItemSub,
   handleContextMenu,
   onEditClick,
+  toggleTodo, // 추가됨
 }: any) => {
   const {
     attributes,
@@ -74,7 +122,7 @@ const SortableTodoItem = ({
     <div
       ref={setNodeRef}
       style={style}
-      className='relative flex flex-col mb-2 group' // 리스트 간격 통일
+      className='relative flex flex-col mb-2 group'
       onContextMenu={(e) => handleContextMenu(e, todo.id)}
     >
       {editingTodoId === todo.id ? (
@@ -94,16 +142,31 @@ const SortableTodoItem = ({
             </div>
           </div>
           {editingSubTodoId === todo.id ? AddTodoItemSub(todo) : null}
-          {openSubTodoIds.includes(todo.id) && todo.subTodos
-            ? renderTodoItemSub(todo)
-            : null}
+
+          {/* 하위 작업 렌더링 로직 수정: SortableContext 적용 */}
+          {openSubTodoIds.includes(todo.id) && todo.subTodos && (
+            <div className='pl-12 mt-1 flex flex-col gap-1'>
+              <SortableContext
+                items={todo.subTodos.map((s: any) => s.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {todo.subTodos.map((sub: any) => (
+                  <SortableSubTodoItem
+                    key={sub.id}
+                    sub={sub}
+                    toggleTodo={toggleTodo}
+                  />
+                ))}
+              </SortableContext>
+            </div>
+          )}
         </>
       )}
     </div>
   );
 };
 
-// --- 2. 메인 TodoList 컴포넌트 ---
+// --- 3. 메인 TodoList 컴포넌트 ---
 const TodoList = () => {
   const {
     gradientMode,
@@ -144,12 +207,38 @@ const TodoList = () => {
     }),
   );
 
+  // 드래그 종료 핸들러 수정
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (over && active.id !== over.id) {
-      const oldIndex = todos.findIndex((t) => t.id === active.id);
-      const newIndex = todos.findIndex((t) => t.id === over.id);
+    if (!over || active.id === over.id) return;
+
+    // 1. 메인 투두 순서 변경 확인
+    const oldIndex = todos.findIndex((t) => t.id === active.id);
+    const newIndex = todos.findIndex((t) => t.id === over.id);
+
+    if (oldIndex !== -1 && newIndex !== -1) {
       reorderTodos(arrayMove(todos, oldIndex, newIndex));
+    } else {
+      // 2. 하위 작업(Sub-todos) 순서 변경 확인
+      for (const todo of todos) {
+        if (!todo.subTodos) continue;
+        const subOldIndex = todo.subTodos.findIndex(
+          (s: any) => s.id === active.id,
+        );
+        const subNewIndex = todo.subTodos.findIndex(
+          (s: any) => s.id === over.id,
+        );
+
+        if (subOldIndex !== -1 && subNewIndex !== -1) {
+          const newSubTodosList = arrayMove(
+            todo.subTodos,
+            subOldIndex,
+            subNewIndex,
+          );
+          updateTodo(todo.id, todo.content, newSubTodosList, todo.color);
+          break;
+        }
+      }
     }
   };
 
@@ -167,7 +256,10 @@ const TodoList = () => {
     setEditingTodoId(id);
     setNewTodoContent(targetTodo.content);
     setNewSubTodos(
-      targetTodo.subTodos?.map((s) => ({ id: s.id, content: s.content })) || [],
+      targetTodo.subTodos?.map((s: any) => ({
+        id: s.id,
+        content: s.content,
+      })) || [],
     );
     setSelectedColor(targetTodo.color || 'transparent');
     setMenuPos(null);
@@ -205,7 +297,7 @@ const TodoList = () => {
     return () => window.removeEventListener('click', closeMenu);
   }, []);
 
-  const ProgressCircle = ({ percentage, size = 36 }) => {
+  const ProgressCircle = ({ percentage, size = 36 }: any) => {
     const radius = (size - 4) / 2;
     const circumference = 2 * Math.PI * radius;
     const offset = circumference - (percentage / 100) * circumference;
@@ -239,17 +331,15 @@ const TodoList = () => {
     );
   };
 
-  // --- 공통 렌더링 함수: 수정 모드 UI ---
   const renderEditorUI = (onSave: () => void, onCancel: () => void) => (
     <div
       className={`flex flex-col animate-in fade-in slide-in-from-top-4 duration-300 w-full z-10 relative
-    ${isAdding ? 'mb-3' : 'mb-1'}`} // 추가 모드일 때는 mb-6으로 넉넉히, 에딧 모드일 때는 mb-1로 타이트하게
+    ${isAdding ? 'mb-3' : 'mb-1'}`}
     >
       <div className='flex items-center gap-1 min-w-0'>
         <div className='w-7 flex-shrink-0' />
         <div
           style={{ border: `3px solid ${selectedColor}` }}
-          // overflow-hidden을 제거하거나 overflow-visible로 설정해야 피커가 보입니다.
           className='flex-grow flex items-center h-14 rounded-full bg-white shadow-lg'
         >
           <div className='w-12 flex-shrink-0 flex items-center justify-center'>
@@ -272,7 +362,6 @@ const TodoList = () => {
               <Palette size={20} />
             </button>
 
-            {/* 컬러피커 위치 조정: 팝업 형태로 뜨도록 수정 */}
             {showColorPicker && (
               <div className='absolute top-full right-0 mt-3 bg-white shadow-2xl border border-gray-100 rounded-2xl p-3 z-[100] flex gap-2 animate-in zoom-in-95 duration-200'>
                 <button
@@ -314,7 +403,6 @@ const TodoList = () => {
         </div>
       </div>
 
-      {/* 하위 작업 영역 */}
       <div className='pl-12 mt-1 flex flex-col gap-1'>
         <div className='flex flex-col gap-1.5'>
           {newSubTodos.map((sub, idx) => (
@@ -359,19 +447,16 @@ const TodoList = () => {
     </div>
   );
 
-  const renderTodoItemMain = (todo, onEditClick) => {
+  const renderTodoItemMain = (todo: any, onEditClick: any) => {
     const totalCount = todo.subTodos?.length || 0;
-
     const completedCount =
-      todo.subTodos?.filter((sub) => sub.completed).length || 0;
-
+      todo.subTodos?.filter((sub: any) => sub.completed).length || 0;
     const percentage =
       totalCount > 0
         ? Math.floor((completedCount / totalCount) * 100)
         : todo.completed
           ? 100
           : 0;
-
     const isLineThrough =
       totalCount > 0
         ? totalCount === completedCount && totalCount !== 0
@@ -379,14 +464,12 @@ const TodoList = () => {
 
     const handleMainCheck = () => {
       if (totalCount > 0) {
-        // 하위 작업이 있으면, 메인 체크 대신 서브 목록 펼치기/닫기
         setOpenSubTodoIds((prev) =>
           prev.includes(todo.id)
             ? prev.filter((i) => i !== todo.id)
             : [...prev, todo.id],
         );
       } else {
-        // 하위 작업이 없으면 기존대로 토글
         toggleTodo(todo.id);
       }
     };
@@ -456,10 +539,7 @@ const TodoList = () => {
 
   const todoLength = useMemo(() => {
     if (todos.length === 0) return 0;
-
-    // 완료되지 않은 메인 투두만 필터링
     const uncompletedItems = todos.filter((todo) => !todo.completed);
-
     return uncompletedItems.length;
   }, [todos]);
 
@@ -472,9 +552,7 @@ const TodoList = () => {
         percent={todoLength}
         gradientMode={gradientMode}
       >
-        <header
-          className={`flex justify-between px-4 pb-4 pt-1 items-center relative left-0 right-0`}
-        >
+        <header className='flex justify-between px-4 pb-4 items-center relative left-0 right-0'>
           <p className='text-textPanelTheme text-dynamic font-baseFont'>{`${currentDate.getMonth() + 1}월 ${currentDate.getDate()}일 (${currentDate.toLocaleDateString('ko-KR', { weekday: 'short' })})`}</p>
           <div className='flex gap-4 items-center'>
             <Link href='./home'>
@@ -542,32 +620,7 @@ const TodoList = () => {
                     editingSubTodoId={editingSubTodoId}
                     AddTodoItemSub={handleSaveSubTodo}
                     openSubTodoIds={openSubTodoIds}
-                    renderTodoItemSub={(t) => (
-                      <div className='pl-12 mt-1 flex flex-col gap-1.5'>
-                        {t.subTodos.map((sub) => (
-                          <div
-                            key={sub.id}
-                            className='flex items-center rounded-full bg-white/95 h-9 px-3 shadow-sm ml-1'
-                          >
-                            <button onClick={() => toggleTodo(sub.id)}>
-                              <Circle
-                                className={
-                                  sub.completed
-                                    ? 'text-mainTheme'
-                                    : 'text-gray-200'
-                                }
-                                size={18}
-                              />
-                            </button>
-                            <p
-                              className={`text-xs font-bold ml-3 ${sub.completed ? 'line-through text-gray-400' : 'text-black'}`}
-                            >
-                              {sub.content}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    toggleTodo={toggleTodo} // 토글 함수 전달
                     handleContextMenu={handleContextMenu}
                   />
                 ))

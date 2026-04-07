@@ -44,8 +44,8 @@ initializeFileUploaderIPC();
   }
 
   const mainWindow = createWindow('main', {
-    width: 450,
-    height: 900,
+    width: 400,
+    height: 700,
     frame: false,
     alwaysOnTop: true,
     webPreferences: {
